@@ -1,0 +1,5 @@
+markdown
+mdx_linkify # https://github.com/daGrevis/mdx_linkify
+python-markdown-math
+pygments
+Jinja2
