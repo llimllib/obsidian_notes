@@ -4,7 +4,10 @@
       <style>
 body {
     margin: auto;
-    width: 700px;
+    /* I would rather this were narrower, but it doesn't work well with the
+       code boxes. Maybe a solution would be to have a wide center column, with
+       a centered, smaller, text column, and wider auto flow code boxes? */
+    width: 800px;
     font-family: Georgia, "Book Antiqua", serif;
     font-size: 1.4rem;
     background-color: #fffff8;
@@ -22,6 +25,12 @@ blockquote {
     padding-left: 1rem;
     padding-top: .05rem;
     padding-bottom: .05rem;
+    /* This is a hack to get the code boxes wider than the parents, but still
+       in the document flow... I would like to figure out how to get the width
+       to be auto-figured-out, but for now I'm just going to set it wide
+       because it works-ish */
+    position: relative;
+    width: 900px;
 }
 h1 {
     font-size: 2rem;
@@ -29,6 +38,20 @@ h1 {
 }
 h2 {
     font-size: 1.8rem;
+}
+table {
+  width: 900px;
+}
+
+thead th {
+  border-bottom: solid 1px #aaa;
+}
+
+tbody tr td {
+  border-bottom: solid 1px #aaa;
+}
+td {
+  padding: 8px;
 }
       </style>
       <meta charset="utf-8">
@@ -49,7 +72,7 @@ h2 {
           <ul>
           {% for backlink in backlinks %}
             <li>
-              <a href="{{ backlink["relpath"] }}">{{ backlink["title"] }}</a>
+              <a href="/{{ backlink["link_path"] }}">{{ backlink["title"] }}</a>
             </li>
           {% endfor %}
           </ul>

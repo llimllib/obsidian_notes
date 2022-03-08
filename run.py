@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 import os
 from pathlib import Path
 import re
@@ -70,6 +70,30 @@ def canonicalize(title: str) -> str:
     return title.lower()
 
 
+# TODO: type the page object... for now I'm just calling it "Any"
+def find(pages: Dict[str, Any], link: str) -> Optional[Dict[str, Any]]:
+    """find a page referred to by `link`
+
+    Pages can be linked in two ways:
+        - By their title
+            - Titles may not be unique and this function will just return the
+              first result in our random search if there are multiple pages
+              with the same title
+        - By their path+title
+    """
+    link = canonicalize(link)
+    for relpath, page in pages.items():
+        if page["canon_title"] == link or relpath == link:
+            return page
+
+
+def split_files(files: List[str]) -> Tuple[List[str], List[str]]:
+    return (
+        [f for f in files if f.endswith(".md")],
+        [f for f in files if not f.endswith(".md")],
+    )
+
+
 def parse(mddir: str, ignore: Optional[List[str]] = None):
     # make the type checker happy
     ignore = ignore if ignore else []
@@ -81,7 +105,8 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
             if dir_ in ignore:
                 dirs.remove(dir_)
 
-        for file in [f for f in files if f.endswith(".md")]:
+        markdown_files, attachments = split_files(files)
+        for file in markdown_files:
             fullpath = os.path.join(root, file)
             title = os.path.splitext(file)[0]
             with open(fullpath) as f:
@@ -92,37 +117,47 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
                 _, source = split_front_matter(buf)
                 links = findlinks(source)
                 relpath = pathname(root.removeprefix(mddir).lstrip("/"))
-                pages[canonicalize(title)] = {
+                pages[os.path.join(relpath, canonicalize(title))] = {
+                    # `title` contains the title, cased as the author cased it
                     "title": title,
+                    # `canon_title` contains the canonicalized title
+                    "canon_title": canonicalize(title),
                     "links": links,
                     "fullpath": fullpath,
+                    "link_path": os.path.join(relpath, outname(file)),
                     "file": file,
                     "relpath": relpath,
                     "source": source,
                     "backlinks": [],
                 }
 
-    for canon_title, page in pages.items():
+        for file in attachments:
+            fullpath = os.path.join(root, file)
+            relpath = pathname(root.removeprefix(mddir).lstrip("/"))
+            pages[os.path.join(relpath, file)] = {
+                "title": file,
+                "canon_title": canonicalize(file),
+                "fullpath": fullpath,
+                "link_path": os.path.join(relpath, file),
+                "file": file,
+                "relpath": relpath,
+                "links": [],
+                "backlinks": [],
+            }
+
+    # calculate backlinks
+    for page in pages.values():
         for link in page["links"]:
-            try:
-                # TODO: we need a path to the backlink, not just the title;
-                # otherwise we can't make a link
-                pages[canonicalize(link)]["backlinks"].append(
-                    {
-                        "title": page["title"],
-                        "relpath": os.path.join(page["relpath"], page[""]),
-                    }
-                )
-                print(canon_title, pages[canon_title]["backlinks"])
-            except KeyError:
-                print(
-                    f"Unable to find {canonicalize(link)} in {list(sorted(pages.keys()))}"
-                )
+            linked_page = find(pages, link)
+            if not linked_page:
+                print(f"unable to find link {link}")
+                continue
+            linked_page["backlinks"].append(page)
 
     outdir = Path(mkdir("./output"))
     generate_stylesheet()
 
-    for title, page in pages.items():
+    for title, page in [(k, v) for k, v in pages.items() if "source" in v]:
         # https://python-markdown.github.io/extensions/
         # - extra: gets us code blocks rendered properly (and lots of
         #   other stuff - do I want all of it?
@@ -152,7 +187,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
         )
 
         mkdir(str(outdir / page["relpath"]))
-        with open(outdir / page["relpath"] / outname(page["file"]), "w") as fout:
+        with open(outdir / page["link_path"], "w") as fout:
             fout.write(
                 template(
                     title=title,
@@ -164,10 +199,12 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 
 
 # TODO:
-# - backlinks
-#   - i.e. typography page should show what links to it
-#   - might require a two-step process; parse the files (and build a graph)
-#     then build the output?
+# - fix attachment links
+#   - example page with no pdf: http://devd.io:8000/visualization/Franke_s_computer_graphics.html
+#   - example embedded image fail: http://devd.io:8000/visualization/color_schemes.html
+# - better code highlighting
+#   - the first chart on this page is completely busto:
+#     - http://devd.io:8000/book_notes/Understanding_Software_Dynamics/Chapter_1_-_My_program_is_too_slow.html
 # - some sort of navigation?
 # - better source code block formatting
 #   - nicer colors (syntax and bg)
@@ -183,6 +220,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 # - add command line arguments for mddir and default_ignores
 # - admonitions might be nice?
 #   - https://python-markdown.github.io/extensions/admonition/
+# - RSS feed
 if __name__ == "__main__":
     mddir = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/personal"
     default_ignores = [".DS_Store", "private"]
