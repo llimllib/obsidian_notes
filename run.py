@@ -19,21 +19,25 @@ def split_front_matter(buf: str) -> Tuple[str, str]:
 
 
 def outname(fname: str) -> str:
+    """Turn a markdown filename into an html file name"""
     fname = re.sub(r"[^\w\-\._~]", "_", fname)
     return re.sub(r"\.md$", ".html", fname)
 
 
 def pathname(dname: str) -> str:
+    """Sanitize a name"""
     return re.sub(r"[^\w\-\._~\\\/]", "_", dname)
 
 
 def mkdir(dir_: str) -> str:
+    """Recursively make dir_ if it does not exist"""
     if not os.path.isdir(dir_):
         os.makedirs(dir_, exist_ok=True)
     return dir_
 
 
 def mtime(f: str) -> str:
+    """Return a string representing the mtime of the file"""
     t = localtime(os.stat(f).st_mtime)
     return strftime("%b %d, %Y", t)
 
@@ -42,23 +46,27 @@ T = Template(open("template.html").read())
 
 
 def template(**kwargs) -> str:
+    """Render the note template"""
     return T.render(**kwargs)
 
 
-def generate_stylesheet() -> None:
+def generate_stylesheet(style: str = "default") -> None:
+    """Use pygments to generate a stylesheet"""
     subprocess.call(
-        "pygmentize -S default -f html -a .codehilite > output/pygments.css",
+        f"pygmentize -S {style} -f html -a .codehilite > output/pygments.css",
         shell=True,
     )
 
 
 def strip_fancy_name(link: str) -> str:
+    """Return the part of a link before the pipe, if present"""
     if "|" in link:
         return link.split("|")[0]
     return link
 
 
 def findlinks(md: str) -> List[str]:
+    """Find all links in a markdown document"""
     # XXX: right now this grabs some "links" from code blocks; i.e. pandas lets
     #      you do stuff like df[["columnA", "columnB"]]. Fix the regex so it
     #      doesn't match that
@@ -88,6 +96,7 @@ def find(pages: Dict[str, Any], link: str) -> Optional[Dict[str, Any]]:
 
 
 def split_files(files: List[str]) -> Tuple[List[str], List[str]]:
+    """Split a file list into markdown and non-markdown files"""
     return (
         [f for f in files if f.endswith(".md")],
         [f for f in files if not f.endswith(".md")],
