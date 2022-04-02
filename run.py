@@ -118,6 +118,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
         for file in markdown_files:
             fullpath = os.path.join(root, file)
             title = os.path.splitext(file)[0]
+            page_title = os.path.basename(title)
             with open(fullpath) as f:
                 buf = f.read()
                 # TODO: do something with the front matter - rn none of my
@@ -129,6 +130,9 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
                 pages[os.path.join(relpath, canonicalize(title))] = {
                     # `title` contains the title, cased as the author cased it
                     "title": title,
+                    # `page_title` is the title without the
+                    # relative path
+                    "page_title": page_title,
                     # `canon_title` contains the canonicalized title
                     "canon_title": canonicalize(title),
                     "links": links,
@@ -138,6 +142,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
                     "relpath": relpath,
                     "source": source,
                     "backlinks": [],
+                    "mtime": mtime(fullpath),
                 }
 
         for file in attachments:
@@ -166,6 +171,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
     outdir = Path(mkdir("./output"))
     generate_stylesheet()
 
+    # output HTML for each page
     for title, page in [(k, v) for k, v in pages.items() if "source" in v]:
         # https://python-markdown.github.io/extensions/
         # - extra: gets us code blocks rendered properly (and lots of
@@ -197,14 +203,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 
         mkdir(str(outdir / page["relpath"]))
         with open(outdir / page["link_path"], "w") as fout:
-            fout.write(
-                template(
-                    title=title,
-                    content=html,
-                    mtime=mtime(page["fullpath"]),
-                    backlinks=page["backlinks"] or None,
-                )
-            )
+            fout.write(template(content=html, **page))
 
 
 # TODO:
@@ -214,6 +213,8 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 # - better code highlighting
 #   - the first chart on this page is completely busto:
 #     - http://devd.io:8000/book_notes/Understanding_Software_Dynamics/Chapter_1_-_My_program_is_too_slow.html
+#   - it shouldn't highlight at all
+#     - could disable language guessing? But generally I like it?
 # - some sort of navigation?
 # - better source code block formatting
 #   - nicer colors (syntax and bg)

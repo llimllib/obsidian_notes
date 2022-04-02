@@ -9,4 +9,7 @@ requirements:
 clean:
 	rm -rf output
 
-.PHONY: build clean requirements
+serve:
+	modd
+
+.PHONY: build clean requirements serve
