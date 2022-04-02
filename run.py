@@ -42,12 +42,19 @@ def mtime(f: str) -> str:
     return strftime("%b %d, %Y", t)
 
 
-T = Template(open("template.html").read())
+pageT = Template(open("templates/page.html").read())
 
 
-def template(**kwargs) -> str:
-    """Render the note template"""
-    return T.render(**kwargs)
+def render_page(**kwargs) -> str:
+    """Render the page template"""
+    return pageT.render(**kwargs)
+
+
+indexT = Template(open("templates/index.html").read())
+
+
+def render_index(**kwargs) -> str:
+    return indexT.render(**kwargs)
 
 
 def generate_stylesheet(style: str = "default") -> None:
@@ -118,7 +125,6 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
         for file in markdown_files:
             fullpath = os.path.join(root, file)
             title = os.path.splitext(file)[0]
-            page_title = os.path.basename(title)
             with open(fullpath) as f:
                 buf = f.read()
                 # TODO: do something with the front matter - rn none of my
@@ -127,12 +133,10 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
                 _, source = split_front_matter(buf)
                 links = findlinks(source)
                 relpath = pathname(root.removeprefix(mddir).lstrip("/"))
-                pages[os.path.join(relpath, canonicalize(title))] = {
+                titlepath = os.path.join(relpath, canonicalize(title))
+                pages[titlepath] = {
                     # `title` contains the title, cased as the author cased it
                     "title": title,
-                    # `page_title` is the title without the
-                    # relative path
-                    "page_title": page_title,
                     # `canon_title` contains the canonicalized title
                     "canon_title": canonicalize(title),
                     "links": links,
@@ -140,6 +144,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
                     "link_path": os.path.join(relpath, outname(file)),
                     "file": file,
                     "relpath": relpath,
+                    "titlepath": titlepath,
                     "source": source,
                     "backlinks": [],
                     "mtime": mtime(fullpath),
@@ -171,8 +176,14 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
     outdir = Path(mkdir("./output"))
     generate_stylesheet()
 
+    # generate index page
+    content_pages = sorted([(k, v) for k, v in pages.items() if "source" in v])
+    open(outdir / "index.html", "w").write(
+        render_index(pages=[v for _, v in content_pages])
+    )
+
     # output HTML for each page
-    for title, page in [(k, v) for k, v in pages.items() if "source" in v]:
+    for title, page in content_pages:
         # https://python-markdown.github.io/extensions/
         # - extra: gets us code blocks rendered properly (and lots of
         #   other stuff - do I want all of it?
@@ -203,7 +214,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 
         mkdir(str(outdir / page["relpath"]))
         with open(outdir / page["link_path"], "w") as fout:
-            fout.write(template(content=html, **page))
+            fout.write(render_page(content=html, **page))
 
 
 # TODO:
@@ -216,6 +227,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 #   - it shouldn't highlight at all
 #     - could disable language guessing? But generally I like it?
 # - some sort of navigation?
+#   - simplest thing that could work is an index page
 # - better source code block formatting
 #   - nicer colors (syntax and bg)
 #   - proper overflow out of parent container

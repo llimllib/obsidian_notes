@@ -63,7 +63,7 @@ td {
   </head>
   <body>
     <main class="container">
-      <h1 class="title">{{ page_title }}</h1>
+      <h1 class="title">{{ title }}</h1>
       <div class="time">{{ mtime }}</div>
       {{ content }}
       {% if backlinks %}
@@ -78,6 +78,7 @@ td {
           </ul>
         </div>
       {% endif %}
+      <div class="index"><a href="/">up</a></div>
     </main>
   </body>
 </html>

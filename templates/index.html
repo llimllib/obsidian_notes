@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+      <style>
+body {
+    margin: auto;
+    /* I would rather this were narrower, but it doesn't work well with the
+       code boxes. Maybe a solution would be to have a wide center column, with
+       a centered, smaller, text column, and wider auto flow code boxes? */
+    width: 800px;
+    font-family: Georgia, "Book Antiqua", serif;
+    font-size: 1.4rem;
+    background-color: #fffff8;
+}
+main {
+    color: #111;
+    line-height: 2rem;
+}
+blockquote {
+    border-left: 1px solid black;
+    padding-left: 12px;
+}
+.codehilite {
+    font-size: 1rem;
+    padding-left: 1rem;
+    padding-top: .05rem;
+    padding-bottom: .05rem;
+    /* This is a hack to get the code boxes wider than the parents, but still
+       in the document flow... I would like to figure out how to get the width
+       to be auto-figured-out, but for now I'm just going to set it wide
+       because it works-ish */
+    position: relative;
+    width: 900px;
+}
+h1 {
+    font-size: 2rem;
+    line-height: 3rem;
+}
+h2 {
+    font-size: 1.8rem;
+}
+table {
+  width: 900px;
+}
+
+thead th {
+  border-bottom: solid 1px #aaa;
+}
+
+tbody tr td {
+  border-bottom: solid 1px #aaa;
+}
+td {
+  padding: 8px;
+}
+      </style>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+      <link rel="stylesheet" href="/pygments.css" type="text/css" />
+      <title>{{ title }} - llimllib notes</title>
+  </head>
+  <body>
+    <main class="container">
+      <ul>
+{% for page in pages %}
+  <li>
+    <a href="{{ page["link_path"] }}">{{ page["titlepath"] }}</a>
+  </li>
+{% endfor %}
+      </ul>
+    </main>
+  </body>
+</html>
