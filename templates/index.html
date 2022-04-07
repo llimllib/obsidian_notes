@@ -59,16 +59,34 @@ td {
       <script type="text/javascript" async
   src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
       <link rel="stylesheet" href="/pygments.css" type="text/css" />
-      <title>{{ title }} - llimllib notes</title>
+      <title>llimllib notes</title>
   </head>
   <body>
     <main class="container">
+      <h2>Recently updated</h2>
       <ul>
-{% for page in pages %}
+{% for page in recently_updated %}
   <li>
+    <span style="display: inline-block; width: 150px">
+      {{ page["updated_date"] }}
+    </span>
     <a href="{{ page["link_path"] }}">{{ page["titlepath"] }}</a>
   </li>
 {% endfor %}
+      </ul>
+      <h2>All Notes</h2>
+      <ul>
+{%- for node in tree.children recursive %}
+    {%- if node.children -%}
+      <li>{{ node.dir }}
+        <ul>{{ loop(node.children) }}</ul>
+      </li>
+    {%- else %}
+      <li>
+        <a href="{{ node.page["link_path"] }}">{{ node.page["title"] }}</a>
+      </li>
+    {%- endif %}
+{%- endfor %}
       </ul>
     </main>
   </body>

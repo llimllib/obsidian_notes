@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
-from time import strftime, localtime
+from time import strftime, localtime, struct_time
 
 from jinja2 import Template
 import markdown
@@ -36,9 +36,12 @@ def mkdir(dir_: str) -> str:
     return dir_
 
 
-def mtime(f: str) -> str:
+def mtime(f: str) -> struct_time:
     """Return a string representing the mtime of the file"""
-    t = localtime(os.stat(f).st_mtime)
+    return localtime(os.stat(f).st_mtime)
+
+
+def formatted_time(t: struct_time) -> str:
     return strftime("%b %d, %Y", t)
 
 
@@ -134,6 +137,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
                 links = findlinks(source)
                 relpath = pathname(root.removeprefix(mddir).lstrip("/"))
                 titlepath = os.path.join(relpath, canonicalize(title))
+                mt = mtime(fullpath)
                 pages[titlepath] = {
                     # `title` contains the title, cased as the author cased it
                     "title": title,
@@ -147,7 +151,8 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
                     "titlepath": titlepath,
                     "source": source,
                     "backlinks": [],
-                    "mtime": mtime(fullpath),
+                    "mtime": mt,
+                    "updated_date": formatted_time(mt),
                 }
 
         for file in attachments:
@@ -177,9 +182,50 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
     generate_stylesheet()
 
     # generate index page
-    content_pages = sorted([(k, v) for k, v in pages.items() if "source" in v])
+    content_pages = list(
+        sorted(
+            [(k, v) for k, v in pages.items() if "source" in v],
+            key=lambda x: x[0].lower(),
+        )
+    )
+    by_mtime = list(
+        reversed(sorted([v for _, v in content_pages], key=lambda x: x["mtime"]))
+    )
+
+    class Node:
+        def __init__(self, dir=None, page=None):
+            self.dir = dir
+            self.page = page
+            self.children = []
+
+        def find(self, dir=None):
+            for c in self.children:
+                if c.dir == dir:
+                    return c
+
+    def insert(node, parts, page):
+        if len(parts) == 1:
+            leaf = Node(page=page)
+            node.children.append(leaf)
+            return leaf
+
+        child = node.find(parts[0])
+        if not child:
+            child = Node(dir=parts[0])
+            node.children.append(child)
+        return insert(child, parts[1:], page)
+
+    root = Node()
+    for path, page in content_pages:
+        parts = path.split("/")
+        insert(root, parts, page)
+
     open(outdir / "index.html", "w").write(
-        render_index(pages=[v for _, v in content_pages])
+        render_index(
+            pages=[v for _, v in content_pages],
+            recently_updated=by_mtime[:10],
+            tree=root,
+        )
     )
 
     # output HTML for each page
