@@ -272,8 +272,9 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 #     - http://devd.io:8000/book_notes/Understanding_Software_Dynamics/Chapter_1_-_My_program_is_too_slow.html
 #   - it shouldn't highlight at all
 #     - could disable language guessing? But generally I like it?
-# - some sort of navigation?
-#   - simplest thing that could work is an index page
+#     - maybe just add a language annotation for every block?
+# - navigation pane?
+#     - skipping it for now, but some sort of collapsible sidebar sounds nice?
 # - better source code block formatting
 #   - nicer colors (syntax and bg)
 #   - proper overflow out of parent container

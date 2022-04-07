@@ -1,3 +1,5 @@
+CDN_BUCKET=obsidian_html
+
 build: requirements
 	venv/bin/python run.py
 	cp favicon.ico output/
@@ -12,4 +14,13 @@ clean:
 serve:
 	modd
 
-.PHONY: build clean requirements serve
+publish:
+	s3cmd sync --acl-public output/ s3://llimllib/${CDN_BUCKET}/
+
+# flush the digital ocean CDN cache
+flush:
+	doctl compute cdn flush \
+		$$(doctl compute cdn list --format ID | tail -n1) \
+		--files ${CDN_BUCKET}/*
+
+.PHONY: build clean requirements serve publish flush
