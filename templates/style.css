@@ -48,9 +48,16 @@ tbody tr td {
 td {
   padding: 8px;
 }
+.recent {
+  display: inline-block;
+  width: 150px;
+}
 
 @media screen and (max-width: 600px) {
   body {
     font-size: 1rem;
+  }
+  .recent {
+    display: none;
   }
 }
