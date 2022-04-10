@@ -4,4 +4,4 @@ My personal code for turning my obsidian notes into a website. Extremely incompl
 
 You can visit the site at http://notes.billmill.org
 
-I deploy this with `make build publish flush`
+I deploy this with `make publish`

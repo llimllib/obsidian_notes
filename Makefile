@@ -14,7 +14,7 @@ clean:
 serve:
 	modd
 
-publish:
+sync:
 	s3cmd sync --acl-public output/ s3://llimllib/${CDN_BUCKET}/
 
 # flush the digital ocean CDN cache
@@ -23,4 +23,6 @@ flush:
 		$$(doctl compute cdn list --format ID | tail -n1) \
 		--files ${CDN_BUCKET}/*
 
-.PHONY: build clean requirements serve publish flush
+publish: build sync flush
+
+.PHONY: build clean requirements serve sync flush publish
