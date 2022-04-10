@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import shutil
 from time import strftime, localtime, struct_time
 
 from jinja2 import Template
@@ -66,6 +67,12 @@ def generate_stylesheet(style: str = "default") -> None:
         f"pygmentize -S {style} -f html -a .codehilite > output/pygments.css",
         shell=True,
     )
+
+
+def copy_stylesheet(from_dir: Path, to_dir: Path) -> None:
+    """Copy stylesheet from the templates dir to output"""
+    for f in from_dir.glob("*.css"):
+        shutil.copy(f, to_dir)
 
 
 def strip_fancy_name(link: str) -> str:
@@ -180,6 +187,7 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 
     outdir = Path(mkdir("./output"))
     generate_stylesheet()
+    copy_stylesheet(Path("./templates"), outdir)
 
     # generate index page
     content_pages = list(
