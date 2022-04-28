@@ -116,12 +116,12 @@ def find(
               with the same title
         - By their path+title
     """
-    link = canonicalize(link)
+    clink = canonicalize(link)
     for relpath, page in pages.items():
-        if page["canon_title"] == link or relpath == link:
+        if page["canon_title"] == clink or relpath == clink:
             return page
-    for path, page in attachments.items():
-        if path == link:
+    for link_path, page in attachments.items():
+        if page["file"] == link or link_path == link:
             return page
 
 
@@ -138,11 +138,6 @@ class FileTree:
         self.dir = dir
         self.page = page
         self.children = []
-
-    def find(self, dir=None):
-        for c in self.children:
-            if c.dir == dir:
-                return c
 
     def __str__(self):
         return os.path.basename(self.dir) if self.dir else self.page["title"]
@@ -192,6 +187,7 @@ def handle_file(path: str, root: str) -> Dict[str, Any]:
                 "rfc3339_mtime": rfc3339_time(t.st_mtime),
                 "created_date": formatted_time(t.st_ctime),
                 "updated_date": formatted_time(t.st_mtime),
+                "attachment": False,
             }
 
     # if it's not a markdown file, parse it as an attachment
@@ -207,6 +203,7 @@ def handle_file(path: str, root: str) -> Dict[str, Any]:
         "relpath": relpath,
         "links": [],
         "backlinks": [],
+        "attachment": True,
     }
 
 
@@ -332,6 +329,28 @@ def copy_attachments(attachments: Dict[str, Any], outdir: Path) -> None:
         shutil.copy(page["fullpath"], outdir / page["link_path"])
 
 
+def attachment_replacer(pages: Dict[str, Any], attachments: Dict[str, Any]):
+    def _attachment_replacer(m: re.Match) -> str:
+        filename = m.group(1)
+        linked_attch = find(pages, attachments, filename)
+        if not linked_attch:
+            err(f"Unable to find attachment {filename}")
+            return ""
+        path = linked_attch["link_path"]
+        # assume it's an image unless it ends with PDF
+        if filename.endswith(".pdf"):
+            return f'<iframe src="/{path}" width="800" height="1200"></iframe>'
+        return f'<img src="/{path}" style="max-width: 800px">'
+
+    return _attachment_replacer
+
+
+def substitute_images(pages: Dict[str, Any], attachments: Dict[str, Any]) -> None:
+    replacer = attachment_replacer(pages, attachments)
+    for page in pages.values():
+        page["source"] = re.sub(r"!\[\[(.*?)\]\]", replacer, page["source"])
+
+
 def parse(mddir: str, ignore: Optional[set[str]] = None):
     """parse a directory of markdown files, ignoring a list of folder names
 
@@ -351,6 +370,7 @@ def parse(mddir: str, ignore: Optional[set[str]] = None):
     generate_stylesheet()
     copy_stylesheet(Path("./templates"), outdir)
     copy_attachments(attachments, outdir)
+    substitute_images(pages, attachments)
 
     generate_index_page(tree, pages, outdir)
     generate_html_pages(pages, outdir)
