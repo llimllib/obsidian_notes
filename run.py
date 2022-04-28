@@ -309,7 +309,6 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
                 "mdx_math",
                 "codehilite",
                 "extra",
-                WikiLinkExtension(base_url="/", end_url=".html"),
                 "tables",
                 "mdx_linkify",
             ],
@@ -351,6 +350,24 @@ def substitute_images(pages: Dict[str, Any], attachments: Dict[str, Any]) -> Non
         page["source"] = re.sub(r"!\[\[(.*?)\]\]", replacer, page["source"])
 
 
+def crosslink_replacer(pages: Dict[str, Any]):
+    def _crosslink_replacer(m: re.Match) -> str:
+        title = m.group(1)
+        linked_page = find(pages, {}, title)
+        if not linked_page:
+            err(f"Unable to find page {title}")
+            return ""
+        return f'<a href="/{linked_page["link_path"]}">{title}</a>'
+
+    return _crosslink_replacer
+
+
+def substitute_crosslinks(pages: Dict[str, Any]) -> None:
+    replacer = crosslink_replacer(pages)
+    for page in pages.values():
+        page["source"] = re.sub(r"\[\[(.*?)\]\]", replacer, page["source"])
+
+
 def parse(mddir: str, ignore: Optional[set[str]] = None):
     """parse a directory of markdown files, ignoring a list of folder names
 
@@ -370,7 +387,9 @@ def parse(mddir: str, ignore: Optional[set[str]] = None):
     generate_stylesheet()
     copy_stylesheet(Path("./templates"), outdir)
     copy_attachments(attachments, outdir)
+
     substitute_images(pages, attachments)
+    substitute_crosslinks(pages)
 
     generate_index_page(tree, pages, outdir)
     generate_html_pages(pages, outdir)
