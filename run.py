@@ -382,20 +382,16 @@ def parse(mddir: str, ignore: Optional[set[str]] = None):
 
 
 # TODO:
-# - fix attachment links
-#   - example page with no pdf: http://devd.io:8000/visualization/Franke_s_computer_graphics.html
-#   - example embedded image fail: http://devd.io:8000/visualization/color_schemes.html
 # - better code highlighting
 #   - the first chart on this page is completely busto:
 #     - http://devd.io:8000/book_notes/Understanding_Software_Dynamics/Chapter_1_-_My_program_is_too_slow.html
 #   - it shouldn't highlight at all
 #     - could disable language guessing? But generally I like it?
 #     - maybe just add a language annotation for every block?
-# - navigation pane?
-#     - skipping it for now, but some sort of collapsible sidebar sounds nice?
-# - better source code block formatting
 #   - nicer colors (syntax and bg)
 #   - proper overflow out of parent container
+# - navigation pane?
+#     - skipping it for now, but some sort of collapsible sidebar sounds nice?
 # - better table formatting
 #   - borders
 # - table of contents for big pages
