@@ -1,14 +1,23 @@
-from typing import List, Optional, Tuple, Dict, Any
+from datetime import datetime, timezone
 import os
 from pathlib import Path
 import re
 import subprocess
 import shutil
-from time import strftime, localtime, struct_time
+from time import strftime, localtime
+from typing import List, Optional, Tuple, Dict, Any
 
 from jinja2 import Template
 import markdown
 from markdown.extensions.wikilinks import WikiLinkExtension
+
+
+def info(msg: str) -> None:
+    print(msg)
+
+
+def err(msg: str) -> None:
+    print(msg)
 
 
 def split_front_matter(buf: str) -> Tuple[str, str]:
@@ -37,13 +46,12 @@ def mkdir(dir_: str) -> str:
     return dir_
 
 
-def mtime(f: str) -> struct_time:
-    """Return a string representing the mtime of the file"""
-    return localtime(os.stat(f).st_mtime)
+def formatted_time(t: float) -> str:
+    return strftime("%b %d, %Y", localtime(t))
 
 
-def formatted_time(t: struct_time) -> str:
-    return strftime("%b %d, %Y", t)
+def rfc3339_time(t: float) -> str:
+    return datetime.fromtimestamp(t, timezone.utc).isoformat()
 
 
 pageT = Template(open("templates/page.html").read())
@@ -96,7 +104,9 @@ def canonicalize(title: str) -> str:
 
 
 # TODO: type the page object... for now I'm just calling it "Any"
-def find(pages: Dict[str, Any], link: str) -> Optional[Dict[str, Any]]:
+def find(
+    pages: Dict[str, Any], attachments: Dict[str, Any], link: str
+) -> Optional[Dict[str, Any]]:
     """find a page referred to by `link`
 
     Pages can be linked in two ways:
@@ -110,6 +120,9 @@ def find(pages: Dict[str, Any], link: str) -> Optional[Dict[str, Any]]:
     for relpath, page in pages.items():
         if page["canon_title"] == link or relpath == link:
             return page
+    for path, page in attachments.items():
+        if path == link:
+            return page
 
 
 def split_files(files: List[str]) -> Tuple[List[str], List[str]]:
@@ -120,124 +133,164 @@ def split_files(files: List[str]) -> Tuple[List[str], List[str]]:
     )
 
 
-def parse(mddir: str, ignore: Optional[List[str]] = None):
-    # make the type checker happy
-    ignore = ignore if ignore else []
-    mddir = os.path.normpath(os.path.expanduser(mddir))
+class FileTree:
+    def __init__(self, dir=None, page=None):
+        self.dir = dir
+        self.page = page
+        self.children = []
 
-    pages = {}
-    for root, dirs, files in os.walk(mddir):
-        for dir_ in dirs:
-            if dir_ in ignore:
-                dirs.remove(dir_)
+    def find(self, dir=None):
+        for c in self.children:
+            if c.dir == dir:
+                return c
 
-        markdown_files, attachments = split_files(files)
-        for file in markdown_files:
-            fullpath = os.path.join(root, file)
-            title = os.path.splitext(file)[0]
-            with open(fullpath) as f:
-                buf = f.read()
-                # TODO: do something with the front matter - rn none of my
-                # files actually have any
-                # https://help.obsidian.md/Advanced+topics/YAML+front+matter
-                _, source = split_front_matter(buf)
-                links = findlinks(source)
-                relpath = pathname(root.removeprefix(mddir).lstrip("/"))
-                titlepath = os.path.join(relpath, canonicalize(title))
-                mt = mtime(fullpath)
-                pages[titlepath] = {
-                    # `title` contains the title, cased as the author cased it
-                    "title": title,
-                    # `canon_title` contains the canonicalized title
-                    "canon_title": canonicalize(title),
-                    "links": links,
-                    "fullpath": fullpath,
-                    "link_path": os.path.join(relpath, outname(file)),
-                    "file": file,
-                    "relpath": relpath,
-                    "titlepath": titlepath,
-                    "source": source,
-                    "backlinks": [],
-                    "mtime": mt,
-                    "updated_date": formatted_time(mt),
-                }
+    def __str__(self):
+        return os.path.basename(self.dir) if self.dir else self.page["title"]
 
-        for file in attachments:
-            fullpath = os.path.join(root, file)
-            relpath = pathname(root.removeprefix(mddir).lstrip("/"))
-            pages[os.path.join(relpath, file)] = {
-                "title": file,
-                "canon_title": canonicalize(file),
-                "fullpath": fullpath,
-                "link_path": os.path.join(relpath, file),
-                "file": file,
+    def __repr__(self):
+        return self.__str__()
+
+
+def handle_file(path: str, root: str) -> Dict[str, Any]:
+    """given a full path and the root of the tree, return a page dict
+
+    path: full path to a file
+    root: the root of the tree we're building
+    """
+    _, extension = os.path.splitext(path)
+    if extension == ".md":
+        with open(path) as f:
+            buf = f.read()
+            # TODO: do something with the front matter - rn none of my
+            # files actually have any
+            # https://help.obsidian.md/Advanced+topics/YAML+front+matter
+            _, source = split_front_matter(buf)
+            links = findlinks(source)
+            dir, filename = os.path.split(path)
+            relpath = pathname(dir.removeprefix(root).lstrip("/"))
+            title, _ = os.path.splitext(filename)
+            titlepath = os.path.join(relpath, canonicalize(title))
+            t = os.stat(path)
+            return {
+                # `title` contains the title, cased as the author cased it
+                "title": title,
+                # `canon_title` contains the canonicalized title
+                "canon_title": canonicalize(title),
+                "links": links,
+                "fullpath": path,
+                "link_path": os.path.join(relpath, outname(filename)),
+                "file": filename,
                 "relpath": relpath,
-                "links": [],
+                "titlepath": titlepath,
+                "source": source,
                 "backlinks": [],
+                "mtime": t.st_mtime,
+                # would be better to put file creation time in front matter
+                # at file create time and pull it from there, but this will
+                # do for now
+                "rfc3339_ctime": rfc3339_time(t.st_ctime),
+                "rfc3339_mtime": rfc3339_time(t.st_mtime),
+                "created_date": formatted_time(t.st_ctime),
+                "updated_date": formatted_time(t.st_mtime),
             }
 
-    # calculate backlinks
+    # if it's not a markdown file, parse it as an attachment
+    dir, filename = os.path.split(path)
+    title, _ = os.path.splitext(filename)
+    relpath = pathname(dir.removeprefix(root).lstrip("/"))
+    return {
+        "title": title,
+        "canon_title": canonicalize(title),
+        "fullpath": path,
+        "link_path": os.path.join(relpath, filename),
+        "file": filename,
+        "relpath": relpath,
+        "links": [],
+        "backlinks": [],
+    }
+
+
+def build_file_tree(
+    dir: str, ignore: set[str]
+) -> Tuple[FileTree, Dict[str, Any], Dict[str, Any]]:
+    """build a file tree from a given directory
+
+    dir: the directory to build the file tree from
+    ignore: a set of directory names to ignore
+
+    returns a FileTree and an index of pages. The index is keyed on titlepath,
+    which is the relative path plus the canonicalized title, so something like
+    'visualization/bar_charts'. The index contains only content pages.
+    """
+    index = {}
+    attachments = {}
+    return (
+        build_file_tree_helper(FileTree(dir=dir), ignore, dir, index, attachments),
+        index,
+        attachments,
+    )
+
+
+def build_file_tree_helper(
+    node: FileTree,
+    ignore: set[str],
+    root_path: str,
+    index: Dict[str, Any],
+    attachments: Dict[str, Any],
+) -> FileTree:
+    # XXX: sorting the whole path is kind of janky, is it right?
+    for de in sorted(
+        os.scandir(os.path.join(root_path, node.dir)), key=lambda x: x.path.lower()
+    ):
+        if de.name in ignore:
+            continue
+
+        if de.is_dir():
+            path = de.path.removeprefix(root_path).lstrip("/")
+            node.children.append(
+                build_file_tree_helper(
+                    FileTree(dir=path), ignore, root_path, index, attachments
+                )
+            )
+        else:
+            page = handle_file(de.path, root_path)
+
+            # we want to index each page by its titlepath, which is something
+            # like 'visualization/bar_charts'. If the page does not have a
+            # titlepath attribute, assume that it's not a content page
+            if "titlepath" in page:
+                index[page["titlepath"]] = page
+            else:
+                attachments[page["link_path"]] = page
+
+            node.children.append(FileTree(page=page))
+
+    return node
+
+
+def calculate_backlinks(pages: Dict[str, Any], attachments: Dict[str, Any]) -> None:
     for page in pages.values():
         for link in page["links"]:
-            linked_page = find(pages, link)
+            linked_page = find(pages, attachments, link)
             if not linked_page:
                 print(f"unable to find link {link}")
                 continue
             linked_page["backlinks"].append(page)
 
-    outdir = Path(mkdir("./output"))
-    generate_stylesheet()
-    copy_stylesheet(Path("./templates"), outdir)
 
-    # generate index page
-    content_pages = list(
-        sorted(
-            [(k, v) for k, v in pages.items() if "source" in v],
-            key=lambda x: x[0].lower(),
-        )
-    )
-    by_mtime = list(
-        reversed(sorted([v for _, v in content_pages], key=lambda x: x["mtime"]))
-    )
-
-    class Node:
-        def __init__(self, dir=None, page=None):
-            self.dir = dir
-            self.page = page
-            self.children = []
-
-        def find(self, dir=None):
-            for c in self.children:
-                if c.dir == dir:
-                    return c
-
-    def insert(node, parts, page):
-        if len(parts) == 1:
-            leaf = Node(page=page)
-            node.children.append(leaf)
-            return leaf
-
-        child = node.find(parts[0])
-        if not child:
-            child = Node(dir=parts[0])
-            node.children.append(child)
-        return insert(child, parts[1:], page)
-
-    root = Node()
-    for path, page in content_pages:
-        parts = path.split("/")
-        insert(root, parts, page)
-
+def generate_index_page(tree: FileTree, pages: Dict[str, Any], outdir: Path) -> None:
+    by_mtime = list(reversed(sorted(pages.values(), key=lambda x: x["mtime"])))
     open(outdir / "index.html", "w").write(
         render_index(
-            pages=[v for _, v in content_pages],
+            pages=pages,
             recently_updated=by_mtime[:10],
-            tree=root,
+            tree=tree,
         )
     )
 
-    # output HTML for each page
-    for title, page in content_pages:
+
+def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
+    for page in pages.values():
         # https://python-markdown.github.io/extensions/
         # - extra: gets us code blocks rendered properly (and lots of
         #   other stuff - do I want all of it?
@@ -268,7 +321,44 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 
         mkdir(str(outdir / page["relpath"]))
         with open(outdir / page["link_path"], "w") as fout:
-            fout.write(render_page(content=html, **page))
+            text = render_page(content=html, **page)
+            fout.write(text)
+            page["html_content"] = text
+
+
+def copy_attachments(attachments: Dict[str, Any], outdir: Path) -> None:
+    for page in attachments.values():
+        mkdir(outdir / page["relpath"])
+        shutil.copy(page["fullpath"], outdir / page["link_path"])
+
+
+def parse(mddir: str, ignore: Optional[set[str]] = None):
+    """parse a directory of markdown files, ignoring a list of folder names
+
+    mddir: the name of the directory to parse files in
+    ignore: an optional list of directory names to ignore. Will be ignored at
+    any level in the tree.
+    """
+    # make the type checker happy
+    ignore = ignore if ignore else set()
+    mddir = os.path.normpath(os.path.expanduser(mddir))
+
+    tree, pages, attachments = build_file_tree(mddir, ignore)
+    calculate_backlinks(pages, attachments)
+
+    outdir = Path(mkdir("./output"))
+
+    generate_stylesheet()
+    copy_stylesheet(Path("./templates"), outdir)
+    copy_attachments(attachments, outdir)
+
+    generate_index_page(tree, pages, outdir)
+    generate_html_pages(pages, outdir)
+
+    # # TODO
+    # open(outdir / "atom.xml", "w").write(
+    #     render_rss(posts=by_mtime[:10], timestamp=datetime.utcnow().isoformat("T"))
+    # )
 
 
 # TODO:
@@ -292,13 +382,10 @@ def parse(mddir: str, ignore: Optional[List[str]] = None):
 #   - https://python-markdown.github.io/extensions/toc/
 #   - apparently the toc extension will do anchor links... would I need a toc
 #     on every page to get that though?
-# - set up DNS
-# - sync to CDN
 # - add command line arguments for mddir and default_ignores
 # - admonitions might be nice?
 #   - https://python-markdown.github.io/extensions/admonition/
-# - RSS feed
 if __name__ == "__main__":
     mddir = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/personal"
-    default_ignores = [".DS_Store", "private"]
+    default_ignores = {".DS_Store", "private", ".obsidian"}
     parse(mddir, ignore=default_ignores)
