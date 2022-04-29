@@ -1,15 +1,16 @@
 from datetime import datetime, timezone
+from html import escape
 import os
 from pathlib import Path
 import re
 import subprocess
 import shutil
-from time import strftime, localtime
+from time import strftime, localtime, time
 from typing import List, Optional, Tuple, Dict, Any
 
 from jinja2 import Template
 import markdown
-from markdown.extensions.wikilinks import WikiLinkExtension
+from strict_rfc3339 import timestamp_to_rfc3339_utcoffset
 
 
 def info(msg: str) -> None:
@@ -51,7 +52,7 @@ def formatted_time(t: float) -> str:
 
 
 def rfc3339_time(t: float) -> str:
-    return datetime.fromtimestamp(t, timezone.utc).isoformat()
+    return timestamp_to_rfc3339_utcoffset(t)
 
 
 pageT = Template(open("templates/page.html").read())
@@ -67,6 +68,13 @@ indexT = Template(open("templates/index.html").read())
 
 def render_index(**kwargs) -> str:
     return indexT.render(**kwargs)
+
+
+atomT = Template(open("templates/atom.xml").read())
+
+
+def render_rss(**kwargs) -> str:
+    return atomT.render(**kwargs)
 
 
 def generate_stylesheet(style: str = "default") -> None:
@@ -215,9 +223,14 @@ def build_file_tree(
     dir: the directory to build the file tree from
     ignore: a set of directory names to ignore
 
-    returns a FileTree and an index of pages. The index is keyed on titlepath,
-    which is the relative path plus the canonicalized title, so something like
-    'visualization/bar_charts'. The index contains only content pages.
+    returns a FileTree, an index of pages, and an index of attachments.
+
+    The page index is keyed on titlepath, which is the relative path plus the
+    canonicalized title, so something like 'visualization/bar_charts'. The
+    index contains only content pages.
+
+    The attachments dictionary is keyed on relative path + filename, so
+    something like 'images/some image 2928984588.png'
     """
     index = {}
     attachments = {}
@@ -285,6 +298,10 @@ def generate_index_page(tree: FileTree, pages: Dict[str, Any], outdir: Path) -> 
         )
     )
 
+    open(outdir / "atom.xml", "w").write(
+        render_rss(posts=by_mtime[:10], timestamp=rfc3339_time(time()))
+    )
+
 
 def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
     for page in pages.values():
@@ -314,6 +331,7 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
             ],
             extension_configs={"mdx_math": {"enable_dollar_delimiter": True}},
         )
+        page["html_escaped_content"] = escape(html)
 
         mkdir(str(outdir / page["relpath"]))
         with open(outdir / page["link_path"], "w") as fout:
@@ -391,13 +409,10 @@ def parse(mddir: str, ignore: Optional[set[str]] = None):
     substitute_images(pages, attachments)
     substitute_crosslinks(pages)
 
-    generate_index_page(tree, pages, outdir)
+    # should come before generate_index_page because it generates the HTML that
+    # is necessary for the atom file output
     generate_html_pages(pages, outdir)
-
-    # # TODO
-    # open(outdir / "atom.xml", "w").write(
-    #     render_rss(posts=by_mtime[:10], timestamp=datetime.utcnow().isoformat("T"))
-    # )
+    generate_index_page(tree, pages, outdir)
 
 
 # TODO:
