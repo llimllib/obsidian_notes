@@ -95,6 +95,19 @@ def canonicalize(title: str) -> str:
     return title.lower()
 
 
+def canonical_path(relative_path: str) -> str:
+    """Given a relative path, return the canonical form
+
+    For example, if you pass "Data Analytics/Duckdb", this returns
+    "Data_Analytics/duckdb". The value returned by this will match the
+    "titlepath" attribute of a page
+    """
+    path, page = os.path.split(relative_path)
+    if path:
+        return f"{pathname(path)}/{canonicalize(page)}"
+    return canonicalize(page)
+
+
 # TODO: type the page object... for now I'm just calling it "Any"
 def find(
     pages: Dict[str, Any], attachments: Dict[str, Any], link: str
@@ -108,7 +121,7 @@ def find(
               with the same title
         - By their path+title
     """
-    clink = canonicalize(link)
+    clink = canonical_path(link)
     for relpath, page in pages.items():
         if page["canon_title"] == clink or relpath == clink:
             return page
