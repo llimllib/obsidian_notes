@@ -11,6 +11,12 @@ main {
     max-width: 800px;
     margin: 2em auto;
 }
+footer {
+    font-size: 1rem;
+    margin-top: 20px;
+    margin-bottom: 100px;
+    text-align: center;
+}
 blockquote {
     border-left: 1px solid black;
     padding-left: 12px;

@@ -30,7 +30,7 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-
       <li>{{ node.dir }}
         <ul>{{ loop(node.children) }}</ul>
       </li>
-    {%- else %}
+    {%- elif not node.page["attachment"] %}
       <li>
         <a href="{{ node.page["link_path"] }}">{{ node.page["title"] }}</a>
       </li>
@@ -38,5 +38,6 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-
 {%- endfor %}
       </ul>
     </main>
+    {% include 'footer.html' %}
   </body>
 </html>
