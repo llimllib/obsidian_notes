@@ -73,7 +73,7 @@ def render_index(**kwargs) -> str:
 atomT = Template(open("templates/atom.xml").read())
 
 
-def render_rss(**kwargs) -> str:
+def render_atom(**kwargs) -> str:
     return atomT.render(**kwargs)
 
 
@@ -299,7 +299,7 @@ def generate_index_page(tree: FileTree, pages: Dict[str, Any], outdir: Path) -> 
     )
 
     open(outdir / "atom.xml", "w").write(
-        render_rss(posts=by_mtime[:10], timestamp=rfc3339_time(time()))
+        render_atom(posts=by_mtime[:10], timestamp=rfc3339_time(time()))
     )
 
 
