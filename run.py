@@ -8,9 +8,11 @@ import shutil
 from time import strftime, localtime, time
 from typing import List, Optional, Tuple, Dict, Any
 
-from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader, Template
 import markdown
 from strict_rfc3339 import timestamp_to_rfc3339_utcoffset
+
+JINJA = Environment(loader=FileSystemLoader("templates"))
 
 
 def info(msg: str) -> None:
@@ -55,26 +57,8 @@ def rfc3339_time(t: float) -> str:
     return timestamp_to_rfc3339_utcoffset(t)
 
 
-pageT = Template(open("templates/page.html").read())
-
-
-def render_page(**kwargs) -> str:
-    """Render the page template"""
-    return pageT.render(**kwargs)
-
-
-indexT = Template(open("templates/index.html").read())
-
-
-def render_index(**kwargs) -> str:
-    return indexT.render(**kwargs)
-
-
-atomT = Template(open("templates/atom.xml").read())
-
-
-def render_atom(**kwargs) -> str:
-    return atomT.render(**kwargs)
+def render(template: str, **kwargs) -> str:
+    return JINJA.get_template(template).render(**kwargs)
 
 
 def generate_stylesheet(style: str = "default") -> None:
@@ -291,7 +275,8 @@ def calculate_backlinks(pages: Dict[str, Any], attachments: Dict[str, Any]) -> N
 def generate_index_page(tree: FileTree, pages: Dict[str, Any], outdir: Path) -> None:
     by_mtime = list(reversed(sorted(pages.values(), key=lambda x: x["mtime"])))
     open(outdir / "index.html", "w").write(
-        render_index(
+        render(
+            "index.html",
             pages=pages,
             recently_updated=by_mtime[:10],
             tree=tree,
@@ -299,7 +284,7 @@ def generate_index_page(tree: FileTree, pages: Dict[str, Any], outdir: Path) -> 
     )
 
     open(outdir / "atom.xml", "w").write(
-        render_atom(posts=by_mtime[:10], timestamp=rfc3339_time(time()))
+        render("atom.xml", posts=by_mtime[:10], timestamp=rfc3339_time(time()))
     )
 
 
@@ -335,7 +320,7 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
 
         mkdir(str(outdir / page["relpath"]))
         with open(outdir / page["link_path"], "w") as fout:
-            text = render_page(content=html, **page)
+            text = render("page.html", content=html, **page)
             fout.write(text)
             page["html_content"] = text
 
