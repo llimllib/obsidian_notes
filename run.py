@@ -141,6 +141,8 @@ def split_files(files: List[str]) -> Tuple[List[str], List[str]]:
 class FileTree:
     def __init__(self, dir=None, page=None):
         self.dir = dir
+        if self.dir:
+            self.basename = os.path.basename(dir)
         self.page = page
         self.children = []
 

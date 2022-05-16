@@ -27,7 +27,7 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-
       <ul>
 {%- for node in tree.children recursive %}
     {%- if node.children -%}
-      <li>{{ node.dir }}
+      <li>{{ node.basename }}
         <ul>{{ loop(node.children) }}</ul>
       </li>
     {%- elif not node.page["attachment"] %}
