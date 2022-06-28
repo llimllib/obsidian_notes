@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from html import escape
 import os
 from pathlib import Path
@@ -8,8 +7,10 @@ import shutil
 from time import strftime, localtime, time
 from typing import List, Optional, Tuple, Dict, Any
 
-from jinja2 import Environment, FileSystemLoader, Template
+from jinja2 import Environment, FileSystemLoader
 import markdown
+from mdx_linkify.mdx_linkify import LinkifyExtension
+from bleach.linkifier import build_url_re, TLDS
 from strict_rfc3339 import timestamp_to_rfc3339_utcoffset
 
 JINJA = Environment(loader=FileSystemLoader("templates"))
@@ -319,6 +320,21 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
         #   - https://github.com/mitya57/python-markdown-math
         # - third party extensions:
         #   https://github.com/Python-Markdown/markdown/wiki/Third-Party-Extensions
+
+        # add some more TLDS to recognize as links. Bleach doesn't recognize
+        # that many:
+        # https://github.com/mozilla/bleach/blob/6cd4d527a6b43569c1e1490e632500199b1efb6c/bleach/linkifier.py
+        #
+        # there are a LOT more, but these cover what I've found so far. Here's
+        # the ripgrep command I used to pull a list of TLDs that are in my
+        # notes:
+        #
+        # rg -o 'https://.*?(\.\w{3})/' output/ --no-filename -r '$1' \
+        #       | sort | uniq
+        #
+        # full list: https://data.iana.org/TLD/tlds-alpha-by-domain.txt
+        TLDS.extend(["art", "horse", "club", "dev", "app", "pub", "ski", "xyz"])
+
         html = markdown.markdown(
             page["source"],
             output_format="html",
@@ -327,7 +343,7 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
                 "codehilite",
                 "extra",
                 "tables",
-                "mdx_linkify",
+                LinkifyExtension(linker_options={"url_re": build_url_re(tlds=TLDS)}),
             ],
             extension_configs={"mdx_math": {"enable_dollar_delimiter": True}},
         )
