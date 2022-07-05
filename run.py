@@ -283,7 +283,7 @@ def calculate_backlinks(pages: Dict[str, Any], attachments: Dict[str, Any]) -> N
         for link in page["links"]:
             linked_page = find(pages, attachments, link)
             if not linked_page:
-                print(f"unable to find link {link}")
+                print(f"unable to find link {link} in {page['title']}")
                 continue
             linked_page["backlinks"].append(page)
 
