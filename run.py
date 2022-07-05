@@ -399,7 +399,12 @@ def crosslink_replacer(pages: Dict[str, Any]):
 def substitute_crosslinks(pages: Dict[str, Any]) -> None:
     replacer = crosslink_replacer(pages)
     for page in pages.values():
-        page["source"] = re.sub(r"\[\[(.*?)\]\]", replacer, page["source"])
+        # match:
+        # - two open square brackets [[
+        # - capture anything up to the next pipe (|) or closing square bracket
+        #     pair ]]
+        # - discard anything after the pipe if present
+        page["source"] = re.sub(r"\[\[(.*?)(?:\|.*?)?\]\]", replacer, page["source"])
 
 
 def parse(mddir: str, ignore: Optional[set[str]] = None):
