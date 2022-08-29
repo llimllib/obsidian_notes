@@ -1,9 +1,11 @@
+import argparse
 from html import escape
 import os
 from pathlib import Path
 import re
 import subprocess
 import shutil
+import sys
 from time import strftime, localtime, time
 from typing import List, Optional, Tuple, Dict, Any
 
@@ -288,19 +290,21 @@ def calculate_backlinks(pages: Dict[str, Any], attachments: Dict[str, Any]) -> N
             linked_page["backlinks"].append(page)
 
 
-def generate_index_page(tree: FileTree, pages: Dict[str, Any], outdir: Path) -> None:
+def generate_index_page(
+    tree: FileTree, pages: Dict[str, Any], outdir: Path, recent: int
+) -> None:
     by_mtime = list(reversed(sorted(pages.values(), key=lambda x: x["mtime"])))
     open(outdir / "index.html", "w").write(
         render(
             "index.html",
             pages=pages,
-            recently_updated=by_mtime[:10],
+            recently_updated=by_mtime[:recent],
             tree=tree,
         )
     )
 
     open(outdir / "atom.xml", "w").write(
-        render("atom.xml", posts=by_mtime[:10], timestamp=rfc3339_time(time()))
+        render("atom.xml", posts=by_mtime[:recent], timestamp=rfc3339_time(time()))
     )
 
 
@@ -407,10 +411,11 @@ def substitute_crosslinks(pages: Dict[str, Any]) -> None:
         page["source"] = re.sub(r"\[\[(.*?)(?:\|.*?)?\]\]", replacer, page["source"])
 
 
-def parse(mddir: str, ignore: Optional[set[str]] = None):
+def parse(mddir: str, recent: int, ignore: Optional[set[str]] = None):
     """parse a directory of markdown files, ignoring a list of folder names
 
     mddir: the name of the directory to parse files in
+    recent: how many posts to show in the "recently updated" section
     ignore: an optional list of directory names to ignore. Will be ignored at
     any level in the tree.
     """
@@ -433,7 +438,7 @@ def parse(mddir: str, ignore: Optional[set[str]] = None):
     # should come before generate_index_page because it generates the HTML that
     # is necessary for the atom file output
     generate_html_pages(pages, outdir)
-    generate_index_page(tree, pages, outdir)
+    generate_index_page(tree, pages, outdir, recent)
 
 
 # TODO:
@@ -457,6 +462,14 @@ def parse(mddir: str, ignore: Optional[set[str]] = None):
 # - admonitions might be nice?
 #   - https://python-markdown.github.io/extensions/admonition/
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--recent",
+        type=int,
+        default=10,
+    )
+    args = parser.parse_args(sys.argv[1:])
+
     mddir = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/personal"
     default_ignores = {".DS_Store", "private", ".obsidian"}
-    parse(mddir, ignore=default_ignores)
+    parse(mddir, args.recent, ignore=default_ignores)
