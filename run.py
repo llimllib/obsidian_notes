@@ -471,7 +471,7 @@ if __name__ == "__main__":
         "--recent",
         help="number of recent entries to show",
         type=int,
-        default=10,
+        default=15,
     )
     args = parser.parse_args(sys.argv[1:])
 
