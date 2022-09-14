@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 from html import escape
 import os
@@ -14,6 +16,7 @@ import markdown
 from mdx_linkify.mdx_linkify import LinkifyExtension
 from bleach.linkifier import build_url_re, TLDS
 from strict_rfc3339 import timestamp_to_rfc3339_utcoffset
+from codeblock import InlineCodeClassExtension
 
 JINJA = Environment(loader=FileSystemLoader("templates"))
 
@@ -348,6 +351,7 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
                 "extra",
                 "tables",
                 LinkifyExtension(linker_options={"url_re": build_url_re(tlds=TLDS)}),
+                InlineCodeClassExtension(),
             ],
             extension_configs={"mdx_math": {"enable_dollar_delimiter": True}},
         )
@@ -465,6 +469,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--recent",
+        help="number of recent entries to show",
         type=int,
         default=10,
     )
