@@ -24,11 +24,15 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-
 {% endfor %}
       </ul>
       <h2>All Notes</h2>
-      <ul>
+      <a id="collapseall" href="#">collapse all</a>
+      <ul class="tree">
 {%- for node in tree.children recursive %}
     {%- if node.children -%}
-      <li>{{ node.basename }}
-        <ul>{{ loop(node.children) }}</ul>
+      <li>
+        <details open>
+          <summary>{{ node.basename }}</summary>
+          <ul>{{ loop(node.children) }}</ul>
+        </details>
       </li>
     {%- elif not node.page["attachment"] %}
       <li>
@@ -40,4 +44,20 @@ src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-
     </main>
     {% include 'footer.html' %}
   </body>
+  <script>
+window.addEventListener("DOMContentLoaded", async (_evt) => {
+  var expanded = true;
+  document.querySelector("#collapseall").addEventListener("click", () => {
+    if (expanded) {
+      document.querySelectorAll("details").forEach(d => d.open = false)
+      document.querySelector("#collapseall").innerText = "expand all"
+      expanded = false;
+    } else {
+      document.querySelectorAll("details").forEach(d => d.open = true)
+      document.querySelector("#collapseall").innerText = "collapse all"
+      expanded = true;
+    }
+  });
+});
+  </script>
 </html>
