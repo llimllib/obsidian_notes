@@ -1,44 +1,44 @@
 body {
-    font-family: Georgia, "Book Antiqua", serif;
-    font-size: 1.4rem;
-    background-color: #fffff8;
-    margin: 20px;
-    padding: 0;
+  font-family: Georgia, "Book Antiqua", serif;
+  font-size: 1.4rem;
+  background-color: #fffff8;
+  margin: 20px;
+  padding: 0;
 }
 main {
-    color: #111;
-    line-height: 2rem;
-    max-width: 800px;
-    margin: 2em auto;
+  color: #111;
+  line-height: 2rem;
+  max-width: 800px;
+  margin: 2em auto;
 }
 footer {
-    font-size: 1rem;
-    margin-top: 20px;
-    margin-bottom: 100px;
-    text-align: center;
+  font-size: 1rem;
+  margin-top: 20px;
+  margin-bottom: 100px;
+  text-align: center;
 }
 blockquote {
-    border-left: 1px solid black;
-    padding-left: 12px;
+  border-left: 1px solid black;
+  padding-left: 12px;
 }
 .codehilite {
-    font-size: 1rem;
-    padding-left: 1rem;
-    padding-top: .05rem;
-    padding-bottom: .05rem;
-    /* This is a hack to get the code boxes wider than the parents, but still
+  font-size: 1rem;
+  padding-left: 1rem;
+  padding-top: 0.05rem;
+  padding-bottom: 0.05rem;
+  /* This is a hack to get the code boxes wider than the parents, but still
        in the document flow... I would like to figure out how to get the width
        to be auto-figured-out, but for now I'm just going to set it wide
        because it works-ish */
-    position: relative;
-    width: 900px;
+  position: relative;
+  width: 900px;
 }
 h1 {
-    font-size: 2rem;
-    line-height: 3rem;
+  font-size: 2rem;
+  line-height: 3rem;
 }
 h2 {
-    font-size: 1.8rem;
+  font-size: 1.8rem;
 }
 table {
   width: 900px;
@@ -66,4 +66,9 @@ td {
   .recent {
     display: none;
   }
+}
+code.oneline {
+  background-color: #eee;
+  padding: 3px;
+  font-size: 1.2rem;
 }
