@@ -31,6 +31,8 @@ def err(msg: str) -> None:
 
 
 FRONT_MATTER_RE = re.compile(r"^\s*---(.*?)\n---\n", re.S)
+
+
 def split_front_matter(buf: str) -> Tuple[str, str]:
     parts = FRONT_MATTER_RE.split(buf, 1)
     if len(parts) == 1:
@@ -41,6 +43,8 @@ def split_front_matter(buf: str) -> Tuple[str, str]:
 
 WHITESPACE_RE = re.compile(r"[^\w\-\._~]")
 MARKDOWN_RE = re.compile(r"\.md$")
+
+
 def outname(fname: str) -> str:
     """Turn a markdown filename into an html file name"""
     fname = WHITESPACE_RE.sub("_", fname)
@@ -48,6 +52,8 @@ def outname(fname: str) -> str:
 
 
 SANITIZE_PATH = re.compile(r"[^\w\-\._~\\\/]")
+
+
 def pathname(dname: str) -> str:
     """Sanitize a name"""
     return SANITIZE_PATH.sub("_", dname)
@@ -94,6 +100,8 @@ def strip_fancy_name(link: str) -> str:
 
 
 LINK_RE = re.compile(r"\[\[(.*?)\]\]")
+
+
 def findlinks(md: str) -> List[str]:
     """Find all links in a markdown document"""
     # XXX: right now this grabs some "links" from code blocks; i.e. pandas lets
@@ -392,11 +400,13 @@ def attachment_replacer(pages: Dict[str, Any], attachments: Dict[str, Any]):
     return _attachment_replacer
 
 
+IMAGE_LINK_RE = re.compile(r"!\[\[(.*?)\]\]")
+
 
 def substitute_images(pages: Dict[str, Any], attachments: Dict[str, Any]) -> None:
     replacer = attachment_replacer(pages, attachments)
     for page in pages.values():
-        page["source"] = LINK_RE.sub(replacer, page["source"])
+        page["source"] = IMAGE_LINK_RE.sub(replacer, page["source"])
 
 
 def crosslink_replacer(pages: Dict[str, Any]):
@@ -416,6 +426,8 @@ def crosslink_replacer(pages: Dict[str, Any]):
 # - capture anything up to the next pipe (|) or closing square bracket pair ]]
 # - discard anything after the pipe if present
 CROSSLINK_RE = re.compile(r"\[\[(.*?)(?:\|.*?)?\]\]")
+
+
 def substitute_crosslinks(pages: Dict[str, Any]) -> None:
     replacer = crosslink_replacer(pages)
     for page in pages.values():
