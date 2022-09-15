@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import annotations
 
 import argparse
 from html import escape
@@ -29,23 +30,27 @@ def err(msg: str) -> None:
     print(msg)
 
 
+FRONT_MATTER_RE = re.compile(r"^\s*---(.*?)\n---\n", re.S)
 def split_front_matter(buf: str) -> Tuple[str, str]:
-    parts = re.split(r"^\s*---(.*?)\n---\n", buf, 1, re.S)
+    parts = FRONT_MATTER_RE.split(buf, 1)
     if len(parts) == 1:
         return ("", parts[0])
     else:
         return (parts[1], parts[2])
 
 
+WHITESPACE_RE = re.compile(r"[^\w\-\._~]")
+MARKDOWN_RE = re.compile(r"\.md$")
 def outname(fname: str) -> str:
     """Turn a markdown filename into an html file name"""
-    fname = re.sub(r"[^\w\-\._~]", "_", fname)
-    return re.sub(r"\.md$", ".html", fname)
+    fname = WHITESPACE_RE.sub("_", fname)
+    return MARKDOWN_RE.sub(".html", fname)
 
 
+SANITIZE_PATH = re.compile(r"[^\w\-\._~\\\/]")
 def pathname(dname: str) -> str:
     """Sanitize a name"""
-    return re.sub(r"[^\w\-\._~\\\/]", "_", dname)
+    return SANITIZE_PATH.sub("_", dname)
 
 
 def mkdir(dir_: str) -> str:
@@ -88,12 +93,13 @@ def strip_fancy_name(link: str) -> str:
     return link
 
 
+LINK_RE = re.compile(r"\[\[(.*?)\]\]")
 def findlinks(md: str) -> List[str]:
     """Find all links in a markdown document"""
     # XXX: right now this grabs some "links" from code blocks; i.e. pandas lets
     #      you do stuff like df[["columnA", "columnB"]]. Fix the regex so it
     #      doesn't match that
-    return list(map(strip_fancy_name, re.findall(r"\[\[(.*?)\]\]", md)))
+    return list(map(strip_fancy_name, LINK_RE.findall(md)))
 
 
 def canonicalize(title: str) -> str:
@@ -386,10 +392,11 @@ def attachment_replacer(pages: Dict[str, Any], attachments: Dict[str, Any]):
     return _attachment_replacer
 
 
+
 def substitute_images(pages: Dict[str, Any], attachments: Dict[str, Any]) -> None:
     replacer = attachment_replacer(pages, attachments)
     for page in pages.values():
-        page["source"] = re.sub(r"!\[\[(.*?)\]\]", replacer, page["source"])
+        page["source"] = LINK_RE.sub(replacer, page["source"])
 
 
 def crosslink_replacer(pages: Dict[str, Any]):
@@ -404,15 +411,15 @@ def crosslink_replacer(pages: Dict[str, Any]):
     return _crosslink_replacer
 
 
+# match:
+# - two open square brackets [[
+# - capture anything up to the next pipe (|) or closing square bracket pair ]]
+# - discard anything after the pipe if present
+CROSSLINK_RE = re.compile(r"\[\[(.*?)(?:\|.*?)?\]\]")
 def substitute_crosslinks(pages: Dict[str, Any]) -> None:
     replacer = crosslink_replacer(pages)
     for page in pages.values():
-        # match:
-        # - two open square brackets [[
-        # - capture anything up to the next pipe (|) or closing square bracket
-        #     pair ]]
-        # - discard anything after the pipe if present
-        page["source"] = re.sub(r"\[\[(.*?)(?:\|.*?)?\]\]", replacer, page["source"])
+        page["source"] = CROSSLINK_RE.sub(replacer, page["source"])
 
 
 def parse(mddir: str, recent: int, ignore: Optional[set[str]] = None):
