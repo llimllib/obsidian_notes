@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+from collections import defaultdict
+from datetime import datetime
 from html import escape
 import os
 from pathlib import Path
@@ -307,6 +309,20 @@ def calculate_backlinks(pages: Dict[str, Any], attachments: Dict[str, Any]) -> N
             linked_page["backlinks"].append(page)
 
 
+def generate_lastweek_page(pages: Dict[str, Any], outdir: Path) -> None:
+    today = datetime.today()
+    pages_by_weeks_ago = defaultdict(list)
+    for p in reversed(sorted(pages.values(), key=lambda x: x["mtime"])):
+        daysago = (today - datetime.fromtimestamp(p["mtime"])).days
+        pages_by_weeks_ago[(daysago - 1) // 7].append(p)
+        if daysago > 21:
+            break
+
+    open(outdir / "lastweek.html", "w").write(
+        render("lastweek.html", pages_by_weeks_ago=pages_by_weeks_ago)
+    )
+
+
 def generate_index_page(
     tree: FileTree, pages: Dict[str, Any], outdir: Path, recent: int
 ) -> None:
@@ -462,6 +478,7 @@ def parse(mddir: str, recent: int, ignore: Optional[set[str]] = None):
     # is necessary for the atom file output
     generate_html_pages(pages, outdir)
     generate_index_page(tree, pages, outdir, recent)
+    generate_lastweek_page(pages, outdir)
 
 
 # TODO:
