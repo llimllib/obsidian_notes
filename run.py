@@ -366,11 +366,41 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
         # the ripgrep command I used to pull a list of TLDs that are in my
         # notes:
         #
-        # rg -o 'https://.*?(\.\w{3})/' output/ --no-filename -r '$1' \
+        # rg -o 'https://.*?(\.\w{3,6})/' output/ --no-filename -r '$1' \
         #       | sort | uniq
         #
         # full list: https://data.iana.org/TLD/tlds-alpha-by-domain.txt
-        TLDS.extend(["art", "horse", "club", "dev", "app", "pub", "ski", "xyz"])
+        TLDS.extend(
+            [
+                ".app",
+                ".art",
+                ".blog",
+                ".build",
+                ".club",
+                ".com",
+                ".dev",
+                ".edu",
+                ".gov",
+                ".guide",
+                ".info",
+                ".media",
+                ".net",
+                ".news",
+                ".ninja",
+                ".org",
+                ".parts",
+                ".pub",
+                ".report",
+                ".ski",
+                ".space",
+                ".studio",
+                ".style",
+                ".tech",
+                ".tools",
+                ".wiki",
+                ".xyz",
+            ]
+        )
 
         html = markdown.markdown(
             page["source"],
