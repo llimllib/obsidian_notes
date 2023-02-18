@@ -387,11 +387,16 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
                 ".net",
                 ".news",
                 ".ninja",
+                ".online",
                 ".org",
                 ".parts",
+                ".party",
                 ".pub",
                 ".report",
+                ".rocks",
+                ".sexy",
                 ".ski",
+                ".social",
                 ".space",
                 ".studio",
                 ".style",
@@ -399,6 +404,7 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
                 ".tools",
                 ".wiki",
                 ".xyz",
+                ".zone",
             ]
         )
 
