@@ -1,67 +1,79 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script type="text/javascript" async
-src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    <link rel="stylesheet" href="/style.css" type="text/css" />
-    <link rel="stylesheet" href="/pygments.css" type="text/css" />
-    <link rel="alternate" type="application/atom+xml" title="Atom" href="/atom.xml">
-    <title>llimllib notes</title>
-  </head>
-  <body>
-    <main class="container">
-      <h2>Last Week's Links</h2>
-      <ul>
-{% for page in pages_by_weeks_ago[0] %}
-  <li>
-    <span class="recent">
-      {{ page["updated_date"] }}
-    </span>
-    <a href="{{ page["link_path"] }}">{{ page["titlepath"] }}</a>
-  </li>
-{% endfor %}
-      </ul>
-      <h2>Two weeks ago</h2>
-      <ul>
-{% for page in pages_by_weeks_ago[1] %}
-  <li>
-    <span class="recent">
-      {{ page["updated_date"] }}
-    </span>
-    <a href="{{ page["link_path"] }}">{{ page["titlepath"] }}</a>
-  </li>
-{% endfor %}
-      </ul>
-      <h2>Three weeks ago</h2>
-      <ul>
-{% for page in pages_by_weeks_ago[2] %}
-  <li>
-    <span class="recent">
-      {{ page["updated_date"] }}
-    </span>
-    <a href="{{ page["link_path"] }}">{{ page["titlepath"] }}</a>
-  </li>
-{% endfor %}
-      </ul>
-    </main>
-    {% include 'footer.html' %}
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
   <script>
-window.addEventListener("DOMContentLoaded", async (_evt) => {
-  var expanded = true;
-  document.querySelector("#collapseall").addEventListener("click", () => {
-    if (expanded) {
-      document.querySelectorAll("details").forEach(d => d.open = false)
-      document.querySelector("#collapseall").innerText = "expand all"
-      expanded = false;
-    } else {
-      document.querySelectorAll("details").forEach(d => d.open = true)
-      document.querySelector("#collapseall").innerText = "collapse all"
-      expanded = true;
+    // Add the subdomain to the path. https://www.goatcounter.com/help/domains
+    window.goatcounter = {
+      path: function (p) {return location.host + p}
     }
-  });
-});
   </script>
+  <!-- visitor counter that does not track personal info -->
+  <script data-goatcounter="https://goatcounter.billmill.org/count" async
+    src="//goatcounter.billmill.org/count.js"></script>
+  <link rel="stylesheet" href="/style.css" type="text/css" />
+  <link rel="stylesheet" href="/pygments.css" type="text/css" />
+  <link rel="alternate" type="application/atom+xml" title="Atom" href="/atom.xml">
+  <title>llimllib notes</title>
+</head>
+
+<body>
+  <main class="container">
+    <h2>Last Week's Links</h2>
+    <ul>
+      {% for page in pages_by_weeks_ago[0] %}
+      <li>
+        <span class="recent">
+          {{ page["updated_date"] }}
+        </span>
+        <a href="{{ page[" link_path"] }}">{{ page["titlepath"] }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    <h2>Two weeks ago</h2>
+    <ul>
+      {% for page in pages_by_weeks_ago[1] %}
+      <li>
+        <span class="recent">
+          {{ page["updated_date"] }}
+        </span>
+        <a href="{{ page[" link_path"] }}">{{ page["titlepath"] }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    <h2>Three weeks ago</h2>
+    <ul>
+      {% for page in pages_by_weeks_ago[2] %}
+      <li>
+        <span class="recent">
+          {{ page["updated_date"] }}
+        </span>
+        <a href="{{ page[" link_path"] }}">{{ page["titlepath"] }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </main>
+  {% include 'footer.html' %}
+</body>
+<script>
+  window.addEventListener("DOMContentLoaded", async (_evt) => {
+    var expanded = true;
+    document.querySelector("#collapseall").addEventListener("click", () => {
+      if (expanded) {
+        document.querySelectorAll("details").forEach(d => d.open = false)
+        document.querySelector("#collapseall").innerText = "expand all"
+        expanded = false;
+      } else {
+        document.querySelectorAll("details").forEach(d => d.open = true)
+        document.querySelector("#collapseall").innerText = "collapse all"
+        expanded = true;
+      }
+    });
+  });
+</script>
+
 </html>
