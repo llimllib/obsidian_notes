@@ -343,6 +343,16 @@ def generate_index_page(
 
 def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
     for page in pages.values():
+        output_path = outdir / page["link_path"]
+
+        # Optimization: If the file has already been converted to HTML and the
+        # HTML is newer than the source, don't regenerate the file
+        if (
+            os.path.isfile(output_path)
+            and page["mtime"] < os.stat(output_path).st_mtime
+        ):
+            continue
+
         # https://python-markdown.github.io/extensions/
         # - extra: gets us code blocks rendered properly (and lots of
         #   other stuff - do I want all of it?
@@ -424,7 +434,7 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
         page["html_escaped_content"] = escape(html)
 
         mkdir(str(outdir / page["relpath"]))
-        with open(outdir / page["link_path"], "w") as fout:
+        with open(output_path, "w") as fout:
             text = render("page.html", content=html, **page)
             fout.write(text)
             page["html_content"] = text
