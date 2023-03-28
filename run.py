@@ -354,8 +354,7 @@ def generate_index_page(
 # there are a LOT more, but these cover what I've found so far. Here's the
 # ripgrep command I used to pull a list of TLDs that are in my notes:
 #
-# rg -o 'https://.*?(\.\w{3,6})/' output/ --no-filename -r '$1' \
-#       | sort | uniq
+# rg -o 'https://.*?(\.\w{3,6})/' output/ --no-filename -r '$1' | sort | uniq
 #
 # full list: https://data.iana.org/TLD/tlds-alpha-by-domain.txt
 TLDS = """ac ad ae aero af ag ai al am an ao app aq ar arpa art as asia at au
