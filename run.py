@@ -341,11 +341,39 @@ def generate_index_page(
     posts = by_mtime[:recent]
     for p in posts:
         if "html_escaped_content" not in p:
-            p["html_escaped_content"] = render_content(p)
+            p["html_escaped_content"] = escape(render_content(p))
 
     open(outdir / "atom.xml", "w").write(
         render("atom.xml", posts=by_mtime[:recent], timestamp=rfc3339_time(time()))
     )
+
+
+# add some more TLDS to recognize as links. Bleach doesn't recognize that many:
+# https://github.com/mozilla/bleach/blob/6cd4d527a6b43569c1e1490e632500199b1efb6c/bleach/linkifier.py
+#
+# there are a LOT more, but these cover what I've found so far. Here's the
+# ripgrep command I used to pull a list of TLDs that are in my notes:
+#
+# rg -o 'https://.*?(\.\w{3,6})/' output/ --no-filename -r '$1' \
+#       | sort | uniq
+#
+# full list: https://data.iana.org/TLD/tlds-alpha-by-domain.txt
+TLDS = """ac ad ae aero af ag ai al am an ao app aq ar arpa art as asia at au
+aw ax az ba bb bd be bf bg bh bi biz bj blog bm bn bo br bs bt build bv bw by
+bz ca cat cc cd cf cg ch ci ck cl club cm cn co com com coop cr cu cv cx cy cz
+de dev dj dk dm do dz ec edu edu ee eg er es et eu fi fj fk fm fo fr ga gb gd
+ge gf gg gh gi gl gm gn gov gov gp gq gr gs gt gu guide gw gy hk hm hn hr ht hu
+id ie il im in info info int io iq ir is it je jm jo jobs jp ke kg kh ki km kn
+kp kr kw ky kz la lb lc li lk lr ls lt lu lv ly ma mc md me media mg mh mil mk
+ml mm mn mo mobi mp mq mr ms mt mu museum mv mw mx my mz na name nc ne net net
+news nf ng ni ninja nl no np nr nu nz om online org org pa parts party pe pf pg
+ph pk pl pm pn post pr pro ps pt pub pw py qa re report ro rocks rs ru rw sa sb
+sc sd se sexy sg sh si sj sk ski sl sm sn so social space sr ss st studio style
+su sv sx sy sz tc td tech tel tf tg th tj tk tl tm tn to tools tp tr travel tt
+tv tw tz ua ug uk us uy uz va vc ve vg vi vn vu wf wiki ws xn xxx xyz ye yt yu
+za zm zone zw""".split()
+
+URL_RE = build_url_re(tlds=TLDS)
 
 
 def render_content(page: Any) -> str:
@@ -374,7 +402,7 @@ def render_content(page: Any) -> str:
             "codehilite",
             "extra",
             "tables",
-            LinkifyExtension(linker_options={"url_re": build_url_re(tlds=TLDS)}),
+            LinkifyExtension(linker_options={"url_re": URL_RE}),
             InlineCodeClassExtension(),
         ],
         extension_configs={"mdx_math": {"enable_dollar_delimiter": True}},
