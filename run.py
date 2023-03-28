@@ -336,9 +336,51 @@ def generate_index_page(
         )
     )
 
+    # the posts may not have been rendered - if so, render them. We need to
+    # have the rendered HTML so we can generate the atom summaries
+    posts = by_mtime[:recent]
+    for p in posts:
+        if "html_escaped_content" not in p:
+            p["html_escaped_content"] = render_content(p)
+
     open(outdir / "atom.xml", "w").write(
         render("atom.xml", posts=by_mtime[:recent], timestamp=rfc3339_time(time()))
     )
+
+
+def render_content(page: Any) -> str:
+    """
+    Given a "page" object, render the markdown within to escaped HTML
+    """
+    # https://python-markdown.github.io/extensions/
+    # - extra: gets us code blocks rendered properly (and lots of
+    #   other stuff - do I want all of it?
+    # - WikiLinkExtension - [[link]] support
+    # - mdx_linkify - search for URLs in text and link them
+    # - tables - markdown table support
+    # - codehilite - code highlighting with pygments
+    #   - to generate a stylesheet:
+    #   pygmentize -S default -f html -a .codehilite > output/styles.css
+    # https://python-markdown.github.io/extensions/code_hilite/#step-2-add-css-classes
+    # - mdx_math for latex support
+    #   - https://github.com/mitya57/python-markdown-math
+    # - third party extensions:
+    #   https://github.com/Python-Markdown/markdown/wiki/Third-Party-Extensions
+    html = markdown.markdown(
+        page["source"],
+        output_format="html",
+        extensions=[
+            "mdx_math",
+            "codehilite",
+            "extra",
+            "tables",
+            LinkifyExtension(linker_options={"url_re": build_url_re(tlds=TLDS)}),
+            InlineCodeClassExtension(),
+        ],
+        extension_configs={"mdx_math": {"enable_dollar_delimiter": True}},
+    )
+
+    return html
 
 
 def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
@@ -353,89 +395,13 @@ def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
         ):
             continue
 
-        # https://python-markdown.github.io/extensions/
-        # - extra: gets us code blocks rendered properly (and lots of
-        #   other stuff - do I want all of it?
-        # - WikiLinkExtension - [[link]] support
-        # - mdx_linkify - search for URLs in text and link them
-        # - tables - markdown table support
-        # - codehilite - code highlighting with pygments
-        #   - to generate a stylesheet:
-        #   pygmentize -S default -f html -a .codehilite > output/styles.css
-        # https://python-markdown.github.io/extensions/code_hilite/#step-2-add-css-classes
-        # - mdx_math for latex support
-        #   - https://github.com/mitya57/python-markdown-math
-        # - third party extensions:
-        #   https://github.com/Python-Markdown/markdown/wiki/Third-Party-Extensions
-
-        # add some more TLDS to recognize as links. Bleach doesn't recognize
-        # that many:
-        # https://github.com/mozilla/bleach/blob/6cd4d527a6b43569c1e1490e632500199b1efb6c/bleach/linkifier.py
-        #
-        # there are a LOT more, but these cover what I've found so far. Here's
-        # the ripgrep command I used to pull a list of TLDs that are in my
-        # notes:
-        #
-        # rg -o 'https://.*?(\.\w{3,6})/' output/ --no-filename -r '$1' \
-        #       | sort | uniq
-        #
-        # full list: https://data.iana.org/TLD/tlds-alpha-by-domain.txt
-        TLDS.extend(
-            [
-                ".app",
-                ".art",
-                ".blog",
-                ".build",
-                ".club",
-                ".com",
-                ".dev",
-                ".edu",
-                ".gov",
-                ".guide",
-                ".info",
-                ".media",
-                ".net",
-                ".news",
-                ".ninja",
-                ".online",
-                ".org",
-                ".parts",
-                ".party",
-                ".pub",
-                ".report",
-                ".rocks",
-                ".sexy",
-                ".ski",
-                ".social",
-                ".space",
-                ".studio",
-                ".style",
-                ".tech",
-                ".tools",
-                ".wiki",
-                ".xyz",
-                ".zone",
-            ]
-        )
-
-        html = markdown.markdown(
-            page["source"],
-            output_format="html",
-            extensions=[
-                "mdx_math",
-                "codehilite",
-                "extra",
-                "tables",
-                LinkifyExtension(linker_options={"url_re": build_url_re(tlds=TLDS)}),
-                InlineCodeClassExtension(),
-            ],
-            extension_configs={"mdx_math": {"enable_dollar_delimiter": True}},
-        )
-        page["html_escaped_content"] = escape(html)
+        # XXX: this is a mess. make a real page object
+        page["html"] = render_content(page)
+        page["html_escaped_content"] = escape(page["html"])
 
         mkdir(str(outdir / page["relpath"]))
         with open(output_path, "w") as fout:
-            text = render("page.html", content=html, **page)
+            text = render("page.html", content=page["html"], **page)
             fout.write(text)
             page["html_content"] = text
 
