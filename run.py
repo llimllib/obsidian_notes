@@ -363,14 +363,14 @@ bz ca cat cc cd cf cg ch ci ck cl club cm cn co com com coop cr cu cv cx cy cz
 de dev dj dk dm do dz ec edu edu ee eg er es et eu exposed fi fj fk fm fo fr ga
 gb gd ge gf gg gh gi gl gm gn gov gov gp gq gr gs gt gu guide gw gy hk hm hn hr
 ht hu id ie il im in info info int io iq ir is it je jm jo jobs jp ke kg kh ki
-km kn kp kr kw ky kz la lb lc li lk lr ls lt lu lv ly ma mc md me media mg mh
-mil mk ml mm mn mo mobi mp mq mr ms mt mu museum mv mw mx my mz na name nc ne
-net net news nf ng ni ninja nl no np nr nu nz om online org org pa parts party
-pe pf pg ph pk pl pm pn post pr pro ps pt pub pw py qa re report ro rocks rs ru
-rw sa sb sc sd se sexy sg sh si sj sk ski sl sm sn so social space sr ss st
-studio style su sv sx sy sz tc td tech tel tf tg th tj tk tl tm tn to tools tp
-tr travel tt tv tw tz ua ug uk us uy uz va vc ve vg vi vn vu wf wiki ws xn xxx
-xyz ye yt yu za zm zone zw""".split()
+km kn kp kr kw ky kz la lb lc li lk lr ls lt lu lv ly ma makeup mc md me media
+mg mh mil mk ml mm mn mo mobi mp mq mr ms mt mu museum mv mw mx my mz na name
+nc ne net net news nf ng ni ninja nl no np nr nu nz om online org org pa parts
+party pe pf pg ph pk pl pm pn post pr pro ps pt pub pw py qa re report ro rocks
+rs ru rw sa sb sc sd se sexy sg sh si sj sk ski sl sm sn so social space sr ss
+st studio style su sv sx sy sz tc td tech tel tf tg th tj tk tl tm tn to tools
+tp tr travel tt tv tw tz ua ug uk us uy uz va vc ve vg vi vn vu wf wiki ws xn
+xxx xyz ye yt yu za zm zone zw""".split()
 
 URL_RE = build_url_re(tlds=TLDS)
 
