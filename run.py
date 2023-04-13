@@ -369,8 +369,8 @@ nc ne net net news nf ng ni ninja nl no np nr nu nz om online org org pa parts
 party pe pf pg ph pk pl pm pn post pr pro ps pt pub pw py qa re report ro rocks
 rs ru rw sa sb sc sd se sexy sg sh si sj sk ski sl sm sn so social space sr ss
 st studio style su sv sx sy sz tc td tech tel tf tg th tj tk tl tm tn to tools
-tp tr travel tt tv tw tz ua ug uk us uy uz va vc ve vg vi vn vu wf wiki ws xn
-xxx xyz ye yt yu za zm zone zw""".split()
+town tp tr travel tt tv tw tz ua ug uk us uy uz va vc ve vg vi vn vu wf wiki ws
+xn xxx xyz ye yt yu za zm zone zw""".split()
 
 URL_RE = build_url_re(tlds=TLDS)
 
