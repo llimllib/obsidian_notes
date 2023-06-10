@@ -5,7 +5,7 @@ build: requirements
 	cp favicon.ico output/
 
 requirements:
-	if [ ! -d "venv" ]; then python -mvenv venv; fi
+	if [ ! -d ".venv" ]; then python -mvenv .venv; fi
 	venv/bin/pip install -r requirements.txt
 
 clean:
