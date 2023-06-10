@@ -450,7 +450,7 @@ def attachment_replacer(pages: Dict[str, Any], attachments: Dict[str, Any]):
         # assume it's an image unless it ends with PDF
         if filename.endswith(".pdf"):
             return f'<iframe src="/{path}" width="800" height="1200"></iframe>'
-        return f'<img src="/{path}" style="max-width: 800px">'
+        return f'<a href="/{path}"><img src="/{path}" style="max-width: 800px"></a>'
 
     return _attachment_replacer
 
