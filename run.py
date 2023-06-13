@@ -372,7 +372,6 @@ MD = (
     .use(anchors_plugin)
     .use(front_matter_plugin)
     .use(footnote_plugin)
-    .use(dollarmath_plugin)
 )
 
 
