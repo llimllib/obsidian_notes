@@ -21,7 +21,7 @@ blockquote {
   border-left: 1px solid hsl(298 100% 70%);
   padding-left: 12px;
 }
-.codehilite {
+div.highlight {
   font-size: 1rem;
   padding-left: 1rem;
   padding-top: 0.05rem;
@@ -73,9 +73,10 @@ td {
     display: none;
   }
 }
-code.oneline {
+p > code,
+li > code {
   background-color: #eee;
-  padding: 3px;
+  padding: 2px;
   font-size: 1.2rem;
 }
 /* https://iamkate.com/code/tree-views/ */

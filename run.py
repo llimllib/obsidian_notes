@@ -15,11 +15,15 @@ from time import strftime, localtime, time
 from typing import List, Optional, Tuple, Dict, Any
 
 from jinja2 import Environment, FileSystemLoader
-import markdown
-from mdx_linkify.mdx_linkify import LinkifyExtension
-from bleach.linkifier import build_url_re, TLDS
+from markdown_it import MarkdownIt
+from mdit_py_plugins.anchors import anchors_plugin
+from mdit_py_plugins.dollarmath import dollarmath_plugin
+from mdit_py_plugins.footnote import footnote_plugin
+from mdit_py_plugins.front_matter import front_matter_plugin
+from pygments import highlight as pygmentize
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters import HtmlFormatter
 from strict_rfc3339 import timestamp_to_rfc3339_utcoffset
-from codeblock import InlineCodeClassExtension
 
 JINJA = Environment(loader=FileSystemLoader("templates"))
 
@@ -83,7 +87,7 @@ def render(template: str, **kwargs) -> str:
 def generate_stylesheet(style: str = "default") -> None:
     """Use pygments to generate a stylesheet"""
     subprocess.call(
-        f"pygmentize -S {style} -f html -a .codehilite > output/pygments.css",
+        f"pygmentize -S {style} -f html -a div.highlight > output/pygments.css",
         shell=True,
     )
 
@@ -348,66 +352,35 @@ def generate_index_page(
     )
 
 
-# add some more TLDS to recognize as links. Bleach doesn't recognize that many:
-# https://github.com/mozilla/bleach/blob/6cd4d527a6b43569c1e1490e632500199b1efb6c/bleach/linkifier.py
-#
-# there are a LOT more, but these cover what I've found so far. Here's the
-# ripgrep command I used to pull a list of TLDs that are in my notes:
-#
-# rg -o 'https://.*?(\.\w{3,6})/' output/ --no-filename -r '$1' | sort | uniq
-#
-# full list: https://data.iana.org/TLD/tlds-alpha-by-domain.txt
-TLDS = """ac ad ae aero af ag ai al am an ao app aq ar arpa art as asia at au
-aw ax az ba bb bd be bf bg bh bi biz bj blog bm bn bo br bs bt build bv bw by
-bz ca cat cc cd cf cg ch ci ck cl club cm cn co com com coop cr cu cv cx cy cz
-de dev dj dk dm do dz ec edu edu ee eg er es et eu exposed fi fj fk fm fo fr ga
-gb gd ge gf gg gh gi gl gm gn gov gov gp gq gr gs gt gu guide gw gy hk hm hn hr
-ht hu id ie il im in info info int io iq ir is it je jm jo jobs jp ke kg kh ki
-km kn kp kr kw ky kz la lb lc li lk lr ls lt lu lv ly ma makeup mc md me media
-mg mh mil mk ml mm mn mo mobi mp mq mr ms mt mu museum mv mw mx my mz na name
-nc ne net net news nf ng ni ninja nl no np nr nu nz om online org org pa parts
-party pe pf pg ph pk pl pm pn post pr pro ps pt pub pw py qa re report ro rocks
-rs ru rw sa sb sc sd se sexy sg sh si sj sk ski sl sm sn so social space sr ss
-st studio style su sv sx sy sz tc td tech tel tf tg th tj tk tl tm tn to tools
-town tp tr travel tt tv tw tz ua ug uk us uy uz va vc ve vg vi vn vu wf wiki ws
-xn xxx xyz ye yt yu za zm zone zw""".split()
+def highlight(code, name, _):
+    """Highlight a block of code"""
+    if not name:
+        return f'<div class="highlight">{code}</div>'
 
-URL_RE = build_url_re(tlds=TLDS)
+    try:
+        lexer = get_lexer_by_name(name)
+    except:
+        print(f"failed to get lexer for {name}")
+        return f'<div class="highlight">{code}</div>'
+    formatter = HtmlFormatter()
+
+    return pygmentize(code, lexer, formatter)
+
+
+MD = (
+    MarkdownIt("gfm-like", {"breaks": True, "html": True, "highlight": highlight})
+    .use(anchors_plugin)
+    .use(front_matter_plugin)
+    .use(footnote_plugin)
+    .use(dollarmath_plugin)
+)
 
 
 def render_content(page: Any) -> str:
     """
     Given a "page" object, render the markdown within to escaped HTML
     """
-    # https://python-markdown.github.io/extensions/
-    # - extra: gets us code blocks rendered properly (and lots of
-    #   other stuff - do I want all of it?
-    # - WikiLinkExtension - [[link]] support
-    # - mdx_linkify - search for URLs in text and link them
-    # - tables - markdown table support
-    # - codehilite - code highlighting with pygments
-    #   - to generate a stylesheet:
-    #   pygmentize -S default -f html -a .codehilite > output/styles.css
-    # https://python-markdown.github.io/extensions/code_hilite/#step-2-add-css-classes
-    # - mdx_math for latex support
-    #   - https://github.com/mitya57/python-markdown-math
-    # - third party extensions:
-    #   https://github.com/Python-Markdown/markdown/wiki/Third-Party-Extensions
-    html = markdown.markdown(
-        page["source"],
-        output_format="html",
-        extensions=[
-            "mdx_math",
-            "codehilite",
-            "extra",
-            "tables",
-            LinkifyExtension(linker_options={"url_re": URL_RE}),
-            InlineCodeClassExtension(),
-        ],
-        extension_configs={"mdx_math": {"enable_dollar_delimiter": True}},
-    )
-
-    return html
+    return MD.render(page["source"])
 
 
 def generate_html_pages(pages: Dict[str, Any], outdir: Path) -> None:
@@ -464,6 +437,7 @@ def substitute_images(pages: Dict[str, Any], attachments: Dict[str, Any]) -> Non
         page["source"] = IMAGE_LINK_RE.sub(replacer, page["source"])
 
 
+# maybe move to https://github.com/jsepia/markdown-it-wikilinks eventually?
 def crosslink_replacer(pages: Dict[str, Any]):
     def _crosslink_replacer(m: re.Match) -> str:
         title = m.group(1)
