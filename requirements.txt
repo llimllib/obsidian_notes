@@ -1,5 +1,8 @@
-markdown
-mdx_linkify # https://github.com/daGrevis/mdx_linkify
+# or do I want to use myst-parser? But that seems to depend on markdown-it anyway
+# myst-parser
+markdown-it-py
+mdit-py-plugins
+linkify-it-py
 python-markdown-math
 pygments
 Jinja2
