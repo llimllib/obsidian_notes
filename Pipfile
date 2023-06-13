@@ -4,12 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-markdown = "*"
 mdx-linkify = "*"
 python-markdown-math = "*"
 pygments = "*"
 jinja2 = "*"
 strict-rfc3339 = "*"
+markdown-it-py = "*"
+mdit-py-plugins = "*"
+linkify-it-py = "*"
 
 [dev-packages]
 

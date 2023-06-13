@@ -3,7 +3,6 @@
 markdown-it-py
 mdit-py-plugins
 linkify-it-py
-python-markdown-math
 pygments
 Jinja2
 strict-rfc3339
