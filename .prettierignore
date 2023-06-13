@@ -1,0 +1,2 @@
+# these templated HTML files can break if prettier tries to format them
+templates/*.html
