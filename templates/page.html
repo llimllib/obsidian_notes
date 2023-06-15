@@ -28,21 +28,21 @@
   <link rel="stylesheet" href="/style.css" type="text/css" />
   <link rel="stylesheet" href="/pygments.css" type="text/css" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="/atom.xml">
-  <title>{{ title }} - llimllib notes</title>
+  <title>{{ page.title }} - llimllib notes</title>
 </head>
 
 <body>
   <main class="container">
-    <h1 class="title">{{ title }}</h1>
-    <div class="time">{{ updated_date }}</div>
-    {{ content }}
+    <h1 class="title">{{ page.title }}</h1>
+    <div class="time">{{ page.updated_date }}</div>
+    {{ page.html }}
     {% if backlinks %}
     <div class="backlinks">
       Backlinks:
       <ul>
-        {% for backlink in backlinks %}
+        {% for backlink in page.backlinks %}
         <li>
-          <a href="/{{ backlink["link_path"] }}">{{ backlink["title"] }}</a>
+          <a href="/{{ backlink.link_path }}">{{ backlink.title }}</a>
         </li>
         {% endfor %}
       </ul>

@@ -38,9 +38,9 @@
       {% for page in recently_updated %}
       <li>
         <span class="recent">
-          {{ page["updated_date"] }}
+          {{ page.updated_date }}
         </span>
-        <a href="{{ page["link_path"] }}">{{ page["titlepath"] }}</a>
+        <a href="{{ page.link_path }}">{{ page.titlepath }}</a>
       </li>
       {% endfor %}
     </ul>
@@ -55,9 +55,9 @@
           <ul>{{ loop(node.children) }}</ul>
         </details>
       </li>
-      {%- elif not node.page["attachment"] %}
+      {%- elif not node.page.attachment %}
       <li>
-        <a href="{{ node.page["link_path"] }}">{{ node.page["title"] }}</a>
+        <a href="{{ node.page.link_path }}">{{ node.page.title }}</a>
       </li>
       {%- endif %}
       {%- endfor %}

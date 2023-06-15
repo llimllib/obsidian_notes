@@ -11,12 +11,12 @@
 
 {%- for post in posts %}
   <entry>
-    <id>https://notes.billmill.org/{{ post["link_path"] }}</id>
-    <link type="text/html" href="https://notes.billmill.org/{{ post["link_path"] }}" />
-    <title>{{ post["title"] }}</title>
-    <published>{{ post["rfc3339_ctime"] }}</published>
-    <updated>{{ post["rfc3339_mtime"] }}</updated>
-    <content type="html">{{ post["html_escaped_content"] }}</content>
+    <id>https://notes.billmill.org/{{ post.link_path }}</id>
+    <link type="text/html" href="https://notes.billmill.org/{{ post.link_path }}" />
+    <title>{{ post.title }}</title>
+    <published>{{ post.rfc3339_ctime }}</published>
+    <updated>{{ post.rfc3339_mtime }}</updated>
+    <content type="html">{{ post.html_escaped_content }}</content>
   </entry>
 {%- endfor %}
 </feed>
