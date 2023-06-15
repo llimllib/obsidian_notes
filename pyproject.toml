@@ -1,0 +1,18 @@
+# https://microsoft.github.io/pyright/#/configuration
+[tool.pyright]
+include = ["."]
+exclude = []
+ignore = []
+# defineConstant = { DEBUG = true }
+# stubPath = "src/stubs"
+venv = ".venv"
+
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+pythonVersion = "3.10"
+pythonPlatform = "Darwin"
+
+executionEnvironments = [
+  { root = "src" }
+]
