@@ -422,13 +422,13 @@ def generate_index_page(
 def highlight(code, name, _):
     """Highlight a block of code"""
     if not name:
-        return f'<div class="highlight">{code}</div>'
+        return f'<div class="highlight">{escape(code)}</div>'
 
     try:
         lexer = get_lexer_by_name(name)
     except:
         print(f"failed to get lexer for {name}")
-        return f'<div class="highlight">{code}</div>'
+        return f'<div class="highlight">{escape(code)}</div>'
     formatter = HtmlFormatter()
 
     return pygmentize(code, lexer, formatter)
