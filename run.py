@@ -344,6 +344,12 @@ def build_file_tree_helper(
         key=lambda x: x.path.lower(),
     ):
         if de.name in ignore:
+            info(f"Ignoring file {de}")
+            continue
+
+        # ignore untitled files or directories
+        if de.name == "Untitled.md" or de.name == "Untitled":
+            info(f"Ignoring untitled object: {de}")
             continue
 
         if de.is_dir():
