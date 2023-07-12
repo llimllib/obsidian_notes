@@ -90,12 +90,16 @@ class Page:
     html_escaped_content: str = ""
 
 
-def info(msg: str) -> None:
-    print(msg)
+def info(msg: str, *args) -> None:
+    yellow = "\033[0;33m"
+    reset = "\033[0m"
+    print(f"{yellow}{msg}{reset}", *args)
 
 
-def err(msg: str) -> None:
-    print(msg)
+def err(msg: str, *args) -> None:
+    red = "\033[0;31m"
+    reset = "\033[0m"
+    print(f"{red}{msg}{reset}", *args)
 
 
 FRONT_MATTER_RE = re.compile(r"^\s*---(.*?)\n---\n", re.S)
@@ -344,12 +348,12 @@ def build_file_tree_helper(
         key=lambda x: x.path.lower(),
     ):
         if de.name in ignore:
-            info(f"Ignoring file {de}")
+            info(f"Ignoring file", de)
             continue
 
         # ignore untitled files or directories
         if de.name == "Untitled.md" or de.name == "Untitled":
-            info(f"Ignoring untitled object: {de}")
+            info(f"Ignoring untitled object", de)
             continue
 
         if de.is_dir():
@@ -382,7 +386,7 @@ def calculate_backlinks(
         for link in page.links:
             linked_page = find(pages, attachments, link)
             if not linked_page:
-                print(f"unable to find link {link} in {page.title}")
+                info(f"unable to find link", link, page.title)
                 continue
             linked_page.backlinks.append(page)
 
@@ -464,7 +468,6 @@ def generate_html_pages(pages: Dict[str, Page], outdir: Path) -> None:
         if os.path.isfile(output_path) and page.mtime < os.stat(output_path).st_mtime:
             continue
 
-        # XXX: this is a mess. make a real page object
         page.html = render_content(page)
         page.html_escaped_content = escape(page.html)
 
@@ -485,7 +488,7 @@ def attachment_replacer(pages: Dict[str, Page], attachments: Dict[str, Attachmen
         filename = m.group(1)
         linked_attch = find(pages, attachments, filename)
         if not linked_attch:
-            err(f"Unable to find attachment {filename}")
+            err(f"Unable to find attachment", filename)
             return ""
         path = linked_attch.link_path
         # assume it's an image unless it ends with PDF
@@ -512,9 +515,12 @@ def crosslink_replacer(pages: Dict[str, Page]):
     def _crosslink_replacer(m: re.Match) -> str:
         title = m.group(1)
         linked_page = find(pages, {}, title)
+        # if we don't find the linked page, assume that the group is not in
+        # fact a link. There are several places in my notes where we use the
+        # string `[[` but it's not a link; leave them be
         if not linked_page:
-            err(f"Unable to find page {title}")
-            return ""
+            err(f"Unable to find page", title)
+            return m.group(0)
         return f'<a href="/{linked_page.link_path}">{title}</a>'
 
     return _crosslink_replacer
