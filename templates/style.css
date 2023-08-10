@@ -136,3 +136,7 @@ li > code {
 #collapseall {
   font-size: 1rem;
 }
+
+video {
+  width: 100%;
+}

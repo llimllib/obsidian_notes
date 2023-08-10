@@ -491,9 +491,15 @@ def attachment_replacer(pages: Dict[str, Page], attachments: Dict[str, Attachmen
             err(f"Unable to find attachment", filename)
             return ""
         path = linked_attch.link_path
-        # assume it's an image unless it ends with PDF
+        # assume it's an image unless it ends with pdf, mov, mp4 or webm
         if filename.endswith(".pdf"):
             return f'<iframe src="/{path}" width="800" height="1200"></iframe>'
+        elif filename.endswith(".mov"):
+            return f'<video controls><source src="/{path}" type="video/quicktime" /><a href="/{path}">download</a></video>'
+        elif filename.endswith(".mp4"):
+            return f'<video controls><source src="/{path}" type="video/mp4" /><a href="/{path}">download</a></video>'
+        elif filename.endswith(".webm"):
+            return f'<video controls><source src="/{path}" type="video/webm" /><a href="/{path}">download</a></video>'
         return f'<a href="/{path}"><img src="/{path}" style="max-width: 800px"></a>'
 
     return _attachment_replacer
