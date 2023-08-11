@@ -13,7 +13,7 @@ import subprocess
 import shutil
 import sys
 from time import strftime, localtime, time
-from typing import List, Optional, Tuple, Dict
+from typing import DefaultDict, Dict, List, Optional, Tuple
 
 from jinja2 import Environment, FileSystemLoader
 from markdown_it import MarkdownIt
@@ -408,7 +408,7 @@ def calculate_backlinks(
 
 def generate_lastweek_page(pages: Dict[str, Page], outdir: Path) -> None:
     today = datetime.today()
-    pages_by_weeks_ago = defaultdict(list)
+    pages_by_weeks_ago: DefaultDict[int, List[Page]] = defaultdict(list)
     for p in reversed(sorted(pages.values(), key=lambda x: x.mtime)):
         daysago = (today - datetime.fromtimestamp(p.mtime)).days
         pages_by_weeks_ago[(daysago - 1) // 7].append(p)
