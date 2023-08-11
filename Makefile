@@ -11,6 +11,9 @@ requirements:
 clean:
 	rm -rf output
 
+pull:
+	git pull
+
 serve:
 	modd
 
@@ -23,6 +26,6 @@ flush:
 		$$(doctl compute cdn list --format ID | tail -n1) \
 		--files ${CDN_BUCKET}/*
 
-publish: build sync flush
+publish: pull build sync flush
 
-.PHONY: build clean requirements serve sync flush publish
+.PHONY: build clean pull requirements serve sync flush publish
