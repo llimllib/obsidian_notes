@@ -335,6 +335,18 @@ def build_file_tree(
     )
 
 
+def isEmptyFile(path: str) -> bool:
+    """return true if a file is empty
+
+    more precisely, if it doesn't have any non-whitespace characters in the
+    first 16 bytes
+
+    must open the file in binary mode because if it's a binary file it may not
+    be decodable to unicode
+    """
+    return not open(path, "rb").read(16).strip()
+
+
 def build_file_tree_helper(
     node: FileTree,
     ignore: set[str],
@@ -364,6 +376,9 @@ def build_file_tree_helper(
                 )
             )
         else:
+            if isEmptyFile(de.path):
+                info(f"Ignoring empty file", de)
+                continue
             page = handle_file(de.path, root_path)
 
             # we want to index each page by its titlepath, which is something
