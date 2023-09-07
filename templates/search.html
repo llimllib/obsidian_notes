@@ -17,41 +17,58 @@
   <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
   </script>
   <script id="search_algo" type="module">
-    import Fuse from 'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.esm.js';
+    import Fuse from "https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.esm.js";
 
     const index = {{ index|tojson }};
 
     const options = {
       includeMatches: true,
       includeScore: true,
-      keys: ['title', 'contents'],
+      keys: ["title", "contents"],
       useExtendedSearch: true,
     };
     const fuse = new Fuse(index, options);
 
     function render(tag, attributes, ...children) {
-        const elt = document.createElement(tag);
-        Object.entries(attributes).forEach(([k,v]) => elt.setAttribute(k, v));
-        children.forEach(child => typeof child === 'string' ? elt.appendChild(document.createTextNode(child)) : elt.appendChild(child));
-        return elt;
+      const elt = document.createElement(tag);
+      Object.entries(attributes).forEach(([k, v]) => elt.setAttribute(k, v));
+      children.forEach((child) =>
+        typeof child === "string"
+          ? elt.appendChild(document.createTextNode(child))
+          : elt.appendChild(child)
+      );
+      return elt;
     }
 
     function search() {
       const resultsList = document.querySelector("#results");
-      resultsList.innerHTML = '';
+      resultsList.innerHTML = "";
 
       const query = document.querySelector("#search").value;
-      if (query === "") { return }
+      if (query === "") {
+        return;
+      }
 
       const result = fuse.search(query);
 
-      for (let i=0; i < Math.min(25, result.length); i++) {
+      for (let i = 0; i < Math.min(25, result.length); i++) {
         const { contents, link_path, title_path } = result[i].item;
-        const indices = result[i].matches.filter(x => x.key === "contents")[0]?.indices;
+        const indices = result[i].matches.filter((x) => x.key === "contents")[0]
+          ?.indices;
         resultsList.appendChild(
-          render("li", { class: "result" },
-            render("a", { class: "title_path", href: `../${link_path}`}, title_path),
-            render("div", { class: "contents" }, contents.substring(indices ? indices[0][0] : 0, 255))
+          render(
+            "li",
+            { class: "result" },
+            render(
+              "a",
+              { class: "title_path", href: `../${link_path}` },
+              title_path
+            ),
+            render(
+              "div",
+              { class: "contents" },
+              contents.substring(indices ? indices[0][0] : 0, 255)
+            )
           )
         );
       }
