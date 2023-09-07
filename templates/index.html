@@ -45,7 +45,7 @@
       {% endfor %}
     </ul>
     <div>
-      <a href="search.html">search</a>
+      <a href="search.html">🔍 search notes</a>
     </div>
     <h2>All Notes</h2>
     <a id="collapseall" href="#">collapse all</a>
@@ -53,7 +53,7 @@
       {%- for node in tree.children recursive %}
       {%- if node.children -%}
       <li>
-        <details open>
+        <details>
           <summary>{{ node.basename }}</summary>
           <ul>{{ loop(node.children) }}</ul>
         </details>
