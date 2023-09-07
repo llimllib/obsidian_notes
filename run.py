@@ -6,6 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from html import escape
+import json
 import os
 from pathlib import Path
 import re
@@ -420,6 +421,20 @@ def generate_lastweek_page(pages: Dict[str, Page], outdir: Path) -> None:
     )
 
 
+def generate_search(pages: Dict[str, Page], outdir: Path) -> None:
+    index = [
+        {
+            "title": page.title,
+            "contents": page.source,
+            "title_path": page.titlepath,
+            "link_path": page.link_path,
+        }
+        for page in pages.values()
+    ]
+
+    open(outdir / "search.html", "w").write(render("search.html", index=index))
+
+
 def generate_index_page(
     tree: FileTree, pages: Dict[str, Page], outdir: Path, recent: int
 ) -> None:
@@ -583,6 +598,8 @@ def parse(mddir: str, recent: int, ignore: Optional[set[str]] = None):
 
     substitute_images(pages, attachments)
     substitute_crosslinks(pages)
+
+    generate_search(pages, outdir)
 
     # should come before generate_index_page because it generates the HTML that
     # is necessary for the atom file output
