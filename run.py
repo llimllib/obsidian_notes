@@ -6,7 +6,6 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from html import escape
-import json
 import os
 from pathlib import Path
 import re
@@ -14,10 +13,11 @@ import subprocess
 import shutil
 import sys
 from time import strftime, localtime, time
-from typing import DefaultDict, Dict, List, Optional, Tuple
+from typing import Any, DefaultDict, Dict, List, Optional, Tuple
 
 from jinja2 import Environment, FileSystemLoader
 from markdown_it import MarkdownIt
+import yaml
 
 # https://github.com/executablebooks/mdit-py-plugins/pull/91 fixes the "not
 # exported" errors pyright reports. Remove the ignore marks once it's merged
@@ -70,6 +70,8 @@ class Page:
     # backlinks is
     backlinks: List[Page | Attachment]
 
+    frontmatter: Dict[str, Any]
+
     # the mtime of the file
     mtime: float
 
@@ -106,12 +108,26 @@ def err(msg: str, *args) -> None:
 FRONT_MATTER_RE = re.compile(r"^\s*---(.*?)\n---\n", re.S)
 
 
-def split_front_matter(buf: str) -> Tuple[str, str]:
+def parse_frontmatter(raw_fm: str) -> Dict[str, Any]:
+    """parse yaml frontmatter and return a dictionary. yaml could be any data
+    type, but in this context we're expecting to get a dict out of this, so
+    throw an exception if we find anything else"""
+    anything = yaml.safe_load(raw_fm)
+    if not anything:
+        return {}
+    elif type(anything) != dict:
+        raise Exception(f"Expected dict, got {type(anything)}")
+    return anything
+
+
+def split_front_matter(buf: str) -> Tuple[Dict[str, Any], str]:
+    """split the front matter from the rest of the markdown document's content.
+    Parse the front matter if present."""
     parts = FRONT_MATTER_RE.split(buf, 1)
     if len(parts) == 1:
-        return ("", parts[0])
+        return ({}, parts[0])
     else:
-        return (parts[1], parts[2])
+        return (parse_frontmatter(parts[1]), parts[2])
 
 
 WHITESPACE_RE = re.compile(r"[^\w\-\._~]")
@@ -264,7 +280,7 @@ def handle_file(path: str, root: str) -> Page | Attachment:
             # TODO: do something with the front matter - rn none of my
             # files actually have any
             # https://help.obsidian.md/Advanced+topics/YAML+front+matter
-            _, source = split_front_matter(buf)
+            frontmatter, source = split_front_matter(buf)
             links = findlinks(source)
             dir, filename = os.path.split(path)
             relpath = pathname(dir.removeprefix(root).lstrip("/"))
@@ -284,6 +300,7 @@ def handle_file(path: str, root: str) -> Page | Attachment:
                 titlepath=titlepath,
                 source=source,
                 backlinks=[],
+                frontmatter=frontmatter,
                 mtime=t.st_mtime,
                 # would be better to put file creation time in front matter
                 # at file create time and pull it from there, but this will
@@ -386,6 +403,12 @@ def build_file_tree_helper(
             # like 'visualization/bar_charts'. If the page does not have a
             # titlepath attribute, assume that it's not a content page
             if isinstance(page, Page):
+                # if a page has frontmatter, and that frontmatter contains a
+                # "draft" key that is non-empty, consider it a draft and don't
+                # render it
+                if type(page) == Page and page.frontmatter.get("draft"):
+                    continue
+
                 index[page.titlepath] = page
             else:
                 attachments[page.link_path] = page
