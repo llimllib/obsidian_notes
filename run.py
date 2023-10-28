@@ -659,8 +659,13 @@ if __name__ == "__main__":
         type=int,
         default=15,
     )
+    parser.add_argument(
+        "--path",
+        help="path to folder of .md files to publish",
+        type=str,
+        default="~/Library/Mobile Documents/iCloud~md~obsidian/Documents/personal",
+    )
     args = parser.parse_args(sys.argv[1:])
 
-    mddir = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/personal"
-    default_ignores = {".DS_Store", "private", ".obsidian"}
-    parse(mddir, args.recent, ignore=default_ignores)
+    default_ignores = {".DS_Store", "private", ".obsidian", ".github", ".git"}
+    parse(args.path, args.recent, ignore=default_ignores)
