@@ -170,7 +170,7 @@ def render(template: str, **kwargs) -> str:
 def generate_stylesheet(style: str = "default") -> None:
     """Use pygments to generate a stylesheet"""
     subprocess.call(
-        f"pygmentize -S {style} -f html -a div.highlight > output/pygments.css",
+        f".venv/bin/pygmentize -S {style} -f html -a div.highlight > output/pygments.css",
         shell=True,
     )
 
