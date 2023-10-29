@@ -1,8 +1,8 @@
-CDN_BUCKET=obsidian_html
-PATH="~/Library/Mobile Documents/iCloud~md~obsidian/Documents/personal"
+CDN_BUCKET = obsidian_html
+MDPATH ?= "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/personal"
 
 build: requirements
-	.venv/bin/python run.py --path ${PATH}
+	.venv/bin/python run.py --path ${MDPATH}
 	cp favicon.ico output/
 
 requirements:
