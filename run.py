@@ -28,9 +28,15 @@ from mdit_py_plugins.front_matter import front_matter_plugin  # type: ignore
 from pygments import highlight as pygmentize
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
-from strict_rfc3339 import timestamp_to_rfc3339_utcoffset
+from strict_rfc3339 import timestamp_to_rfc3339_utcoffset, rfc3339_to_timestamp
 
 JINJA = Environment(loader=FileSystemLoader("templates"))
+
+
+@dataclass
+class GitStat:
+    st_mtime: float
+    st_ctime: float
 
 
 @dataclass
@@ -267,7 +273,7 @@ class FileTree:
         return self.__str__()
 
 
-def handle_file(path: str, root: str) -> Page | Attachment:
+def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
     """given a full path and the root of the tree, return a page dict
 
     path: full path to a file
@@ -286,7 +292,22 @@ def handle_file(path: str, root: str) -> Page | Attachment:
             relpath = pathname(dir.removeprefix(root).lstrip("/"))
             title, _ = os.path.splitext(filename)
             titlepath = os.path.join(relpath, canonicalize(title))
-            t = os.stat(path)
+
+            # if use_git_times is true, assume that the file is stored in git,
+            # and get ctime and mtime from git.
+            if use_git_times:
+                ctime, mtime = map(
+                    rfc3339_to_timestamp,
+                    subprocess.check_output(
+                        ["git", "-C", dir, "log", "-1", "--pretty=format:%aI %cI", path]
+                    )
+                    .decode("utf8")
+                    .split(" "),
+                )
+                t = GitStat(ctime, mtime)
+            else:
+                t = os.stat(path)
+
             return Page(
                 # `title` contains the title, cased as the author cased it
                 title=title,
@@ -328,7 +349,7 @@ def handle_file(path: str, root: str) -> Page | Attachment:
 
 
 def build_file_tree(
-    dir: str, ignore: set[str]
+    dir: str, ignore: set[str], use_git_times: bool
 ) -> Tuple[FileTree, Dict[str, Page], Dict[str, Attachment]]:
     """build a file tree from a given directory
 
@@ -347,7 +368,9 @@ def build_file_tree(
     index = {}
     attachments = {}
     return (
-        build_file_tree_helper(FileTree(dir=dir), ignore, dir, index, attachments),
+        build_file_tree_helper(
+            FileTree(dir=dir), ignore, dir, index, attachments, use_git_times
+        ),
         index,
         attachments,
     )
@@ -371,6 +394,7 @@ def build_file_tree_helper(
     root_path: str,
     index: Dict[str, Page],
     attachments: Dict[str, Attachment],
+    use_git_times: bool,
 ) -> FileTree:
     assert node.dir
     for de in sorted(
@@ -390,14 +414,19 @@ def build_file_tree_helper(
             path = de.path.removeprefix(root_path).lstrip("/")
             node.children.append(
                 build_file_tree_helper(
-                    FileTree(dir=path), ignore, root_path, index, attachments
+                    FileTree(dir=path),
+                    ignore,
+                    root_path,
+                    index,
+                    attachments,
+                    use_git_times,
                 )
             )
         else:
             if isEmptyFile(de.path):
                 info(f"Ignoring empty file", de)
                 continue
-            page = handle_file(de.path, root_path)
+            page = handle_file(de.path, root_path, use_git_times)
 
             # we want to index each page by its titlepath, which is something
             # like 'visualization/bar_charts'. If the page does not have a
@@ -598,7 +627,12 @@ def substitute_crosslinks(pages: Dict[str, Page]) -> None:
         page.source = CROSSLINK_RE.sub(replacer, page.source)
 
 
-def parse(mddir: str, recent: int, ignore: Optional[set[str]] = None):
+def parse(
+    mddir: str,
+    recent: int,
+    use_git_times: bool,
+    ignore: Optional[set[str]] = None,
+):
     """parse a directory of markdown files, ignoring a list of folder names
 
     mddir: the name of the directory to parse files in
@@ -610,7 +644,7 @@ def parse(mddir: str, recent: int, ignore: Optional[set[str]] = None):
     ignore = ignore if ignore else set()
     dir = os.path.normpath(os.path.expanduser(mddir))
 
-    tree, pages, attachments = build_file_tree(dir, ignore)
+    tree, pages, attachments = build_file_tree(dir, ignore, use_git_times)
     calculate_backlinks(pages, attachments)
 
     outdir = Path(mkdir("./output"))
@@ -665,6 +699,11 @@ if __name__ == "__main__":
         type=str,
         default="~/Library/Mobile Documents/iCloud~md~obsidian/Documents/personal",
     )
+    parser.add_argument(
+        "--use-git-times",
+        action="store_true",
+        help="use git modified time instead of mtime for file timestamps",
+    )
     args = parser.parse_args(sys.argv[1:])
 
     default_ignores = {
@@ -675,4 +714,9 @@ if __name__ == "__main__":
         ".git",
         ".gitignore",
     }
-    parse(args.path, args.recent, ignore=default_ignores)
+    parse(
+        args.path,
+        args.recent,
+        args.use_git_times,
+        ignore=default_ignores,
+    )
