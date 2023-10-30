@@ -1,9 +1,8 @@
-# or do I want to use myst-parser? But that seems to depend on markdown-it anyway
-# myst-parser
 Jinja2
 linkify-it-py
 markdown-it-py
 mdit-py-plugins
 pygments
+python-magic
 pyyaml
 strict-rfc3339
