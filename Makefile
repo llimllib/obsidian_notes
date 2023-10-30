@@ -19,7 +19,8 @@ serve:
 	modd
 
 sync:
-	s3cmd sync --acl-public output/ s3://llimllib/${CDN_BUCKET}/
+	s3cmd sync --guess-mime-type --acl-public \
+		output/ s3://llimllib/${CDN_BUCKET}/
 
 # flush the digital ocean CDN cache
 flush:
