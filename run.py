@@ -289,9 +289,13 @@ def gitstat(dir: str, path: str) -> GitStat:
     # possibly I should add --follow so that this persists through renames?
     # though maybe I ought to consider a rename a recreation of a file? not
     # clear to me whether it's worth it or not.
-    times = subprocess.check_output(
-        ["git", "-C", dir, "log", "--pretty=format:%aI %cI", path]
-    ).decode("utf8")
+    times = (
+        subprocess.check_output(
+            ["git", "-C", dir, "log", "--pretty=format:%aI %cI", path]
+        )
+        .decode("utf8")
+        .split("\n")
+    )
 
     # The modified time is the second timestamp on the first line
     mtime = rfc3339_to_timestamp(times[0].split(" ")[1])
