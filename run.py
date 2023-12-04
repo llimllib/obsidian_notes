@@ -188,9 +188,16 @@ def copy_stylesheet(from_dir: Path, to_dir: Path) -> None:
 
 
 def strip_fancy_name(link: str) -> str:
-    """Return the part of a link before the pipe, if present"""
+    """Return the name of a link
+
+    Strip a pipe, which is used in a link like [[Some long title|link text]]
+
+    or a hash, which is used like [[Somepage#anchor]]
+    """
     if "|" in link:
         return link.split("|")[0]
+    if "#" in link:
+        return link.split("#")[0]
     return link
 
 
@@ -623,27 +630,51 @@ def substitute_images(
         page.source = IMAGE_LINK_RE.sub(replacer, page.source)
 
 
+def sanitize(s: str) -> str:
+    return re.sub(r"[^\w]", "-", s.rstrip()).lower()
+
+
 # maybe move to https://github.com/jsepia/markdown-it-wikilinks eventually?
 def crosslink_replacer(pages: Dict[str, Page]):
     def _crosslink_replacer(m: re.Match) -> str:
-        title = m.group(1)
+        rawlink = m.group(1)
+        title = rawlink
+        nicetitle = None
+        anchor = None
+
+        # [[page|nice title]] -> title: page, nicetitle: nice title
+        if "|" in rawlink:
+            title, nicetitle = rawlink.split("|")
+
+        # [[page#anchor]] -> title: page, anchor: anchor
+        if "#" in title:
+            title, anchor = title.split("#")
+
         linked_page = find(pages, {}, title)
+
         # if we don't find the linked page, assume that the group is not in
         # fact a link. There are several places in my notes where we use the
         # string `[[` but it's not a link; leave them be
         if not linked_page:
             err(f"Unable to find page", title)
             return m.group(0)
-        return f'<a href="/{linked_page.link_path}">{title}</a>'
+
+        linktitle = nicetitle if nicetitle else title
+
+        if not anchor:
+            return f'<a href="/{linked_page.link_path}">{linktitle}</a>'
+        else:
+            return (
+                f'<a href="/{linked_page.link_path}#{sanitize(anchor)}">{linktitle}</a>'
+            )
 
     return _crosslink_replacer
 
 
 # match:
 # - two open square brackets [[
-# - capture anything up to the next pipe (|) or closing square bracket pair ]]
-# - discard anything after the pipe if present
-CROSSLINK_RE = re.compile(r"\[\[(.*?)(?:\|.*?)?\]\]")
+# - capture anything up to the closing square bracket pair ]]
+CROSSLINK_RE = re.compile(r"\[\[(.*?)\]\]")
 
 
 def substitute_crosslinks(pages: Dict[str, Page]) -> None:
