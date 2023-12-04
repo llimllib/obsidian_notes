@@ -631,6 +631,20 @@ def substitute_images(
 
 
 def sanitize(s: str) -> str:
+    """Replace non-alphanum-characters with dash and lowercase
+
+    I'm sure this doesn't quite match the ids we're giving to section headers,
+    but it seems to be close enough for now. Ultimately, I should look into the
+    generation function and figure out exactly how it's turning:
+
+        ## Day 2
+
+    into
+
+        <h2 id="day-2">Day 2</h2>
+
+    so that I can match it precisely.
+    """
     return re.sub(r"[^\w]", "-", s.rstrip()).lower()
 
 
@@ -660,13 +674,9 @@ def crosslink_replacer(pages: Dict[str, Page]):
             return m.group(0)
 
         linktitle = nicetitle if nicetitle else title
+        anchor = f"#{sanitize(anchor)}" if anchor else ""
 
-        if not anchor:
-            return f'<a href="/{linked_page.link_path}">{linktitle}</a>'
-        else:
-            return (
-                f'<a href="/{linked_page.link_path}#{sanitize(anchor)}">{linktitle}</a>'
-            )
+        return f'<a href="/{linked_page.link_path}{anchor}">{linktitle}</a>'
 
     return _crosslink_replacer
 
