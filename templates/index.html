@@ -48,7 +48,7 @@
       <a href="search.html">🔍 search notes</a>
     </div>
     <h2>All Notes</h2>
-    <a id="collapseall" href="#">collapse all</a>
+    <a id="collapseall" href="#">expand all</a>
     <ul class="tree">
       {%- for node in tree.children recursive %}
       {%- if node.children -%}
@@ -70,7 +70,7 @@
 </body>
 <script>
   window.addEventListener("DOMContentLoaded", async (_evt) => {
-    var expanded = true;
+    var expanded = false;
     document.querySelector("#collapseall").addEventListener("click", () => {
       if (expanded) {
         document.querySelectorAll("details").forEach(d => d.open = false)
