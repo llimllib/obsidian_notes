@@ -310,7 +310,7 @@ def gitstat(dir: str, path: str) -> GitStat:
     # The created time is the first timestamp on the last line
     ctime = rfc3339_to_timestamp(times[-1].split(" ")[0])
 
-    return GitStat(ctime, mtime)
+    return GitStat(st_mtime=mtime, st_ctime=ctime)
 
 
 def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
@@ -745,10 +745,8 @@ def parse(
 # - better table formatting
 #   - borders
 # - table of contents for big pages
-#   - https://python-markdown.github.io/extensions/toc/
-#   - apparently the toc extension will do anchor links... would I need a toc
-#     on every page to get that though?
-# - add command line arguments for mddir and default_ignores
+#   - there appears to be no toc plugin for mdit-py
+# - add command line arguments default_ignores
 # - admonitions might be nice?
 #   - https://python-markdown.github.io/extensions/admonition/
 if __name__ == "__main__":
