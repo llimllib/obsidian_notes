@@ -296,6 +296,9 @@ def gitstat(dir: str, path: str) -> GitStat:
     # possibly I should add --follow so that this persists through renames?
     # though maybe I ought to consider a rename a recreation of a file? not
     # clear to me whether it's worth it or not.
+    #
+    # this is really slow, and I don't see a path to speeding it up a
+    # tremendous amount
     times = (
         subprocess.check_output(
             ["git", "-C", dir, "log", "--pretty=format:%aI %cI", path]
