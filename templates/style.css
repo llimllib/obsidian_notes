@@ -10,6 +10,12 @@ body {
   margin: 20px;
   padding: 0;
 }
+p > code,
+li > code {
+  background-color: #eee;
+  padding: 2px;
+  font-size: 1.2rem;
+}
 
 @media screen and (max-width: 600px) {
   body {
@@ -17,6 +23,12 @@ body {
   }
   .recent {
     display: none;
+  }
+  p > code,
+  li > code {
+    background-color: #eee;
+    padding: 1px;
+    font-size: 1rem;
   }
 }
 
@@ -78,12 +90,6 @@ td {
 .recent {
   display: inline-block;
   width: 130px;
-}
-p > code,
-li > code {
-  background-color: #eee;
-  padding: 2px;
-  font-size: 1.2rem;
 }
 /* https://iamkate.com/code/tree-views/ */
 .tree {
