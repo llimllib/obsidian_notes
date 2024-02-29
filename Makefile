@@ -5,6 +5,10 @@ build: requirements
 	.venv/bin/python run.py --path ${MDPATH} --use-git-times
 	cp favicon.ico output/
 
+# only for use in dev, for quick iteration
+build-quick:
+	.venv/bin/python run.py --path ${MDPATH}
+
 requirements:
 	if [ ! -d ".venv" ]; then python -mvenv .venv; fi
 	.venv/bin/pip install -r requirements.txt
@@ -30,4 +34,4 @@ flush:
 
 publish: pull build sync flush
 
-.PHONY: build clean pull requirements serve sync flush publish
+.PHONY: build build-quick clean pull requirements serve sync flush publish
