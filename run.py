@@ -598,7 +598,6 @@ def generate_index_page(
 def generate_dir_pages(root: FileTree, pages: Dict[str, Page], outdir: Path) -> None:
     for child in root.children:
         if child.dir:
-            info("creating directory file " + str(outdir / f"{child.reldir}.html"))
             open(outdir / f"{child.reldir}.html", "w").write(
                 render("dir.html", tree=child)
             )
