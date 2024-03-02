@@ -57,7 +57,7 @@
       {%- if node.children -%}
       <li>
         <details>
-          <summary>{{ node.basename }}</summary>
+          <summary>{{ node.basename }} {{ node.dirlink() }}</summary>
           <ul>{{ loop(node.children) }}</ul>
         </details>
       </li>
