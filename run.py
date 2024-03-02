@@ -13,7 +13,7 @@ import subprocess
 import shutil
 import sys
 from time import strftime, localtime, time
-from typing import Any, DefaultDict, Dict, List, Optional, Tuple
+from typing import Any, DefaultDict, Dict, Generator, List, Optional, Tuple
 
 from jinja2 import Environment, FileSystemLoader
 from markdown_it import MarkdownIt
@@ -49,6 +49,12 @@ class Attachment:
     relpath: str
     links: List[str]
     backlinks: List[Page | Attachment]
+
+    def __eq__(self, b):
+        return b.title == self.title
+
+    def __hash__(self):
+        return hash(("title", self.title))
 
 
 @dataclass
@@ -97,6 +103,19 @@ class Page:
 
     # the same HTML, escaped for use in the atom feed
     html_escaped_content: str = ""
+
+    def __eq__(self, b):
+        return b.title == self.title
+
+    def __hash__(self):
+        return hash(("title", self.title))
+
+    def dirlinks(self) -> Generator[str, None, None]:
+        """yield a link to each dir page, all the way back to the root"""
+        pathparts = self.titlepath.split("/")[:-1]
+        for i in range(len(pathparts)):
+            link = "/" + "/".join(pathparts[: i + 1])
+            yield f'<a href="{ link }.html">{ pathparts[i] }</a>'
 
 
 def info(msg: str, *args) -> None:
@@ -264,10 +283,40 @@ class FileTree:
         self, dir: Optional[str] = None, page: Optional[Page | Attachment] = None
     ):
         self.dir = dir
-        if self.dir is not None:
+        if isinstance(self.dir, str):
             self.basename = os.path.basename(self.dir)
+            self.reldir = pathname(self.dir)
+            self.dirparts = self.dir.split("/")
+            self.reldirparts = self.reldir.split("/")
         self.page = page
-        self.children = []
+        self.children: list[FileTree] = []
+
+    def dir_backlinks(self):
+        """return backlinks for all direct children of this node"""
+        return set(
+            backlink
+            for child in self.children
+            if child.page
+            for backlink in child.page.backlinks
+        )
+
+    def has_child_dirs(self):
+        """return true if there are child dirs"""
+        return any(child.dir for child in self.children)
+
+    def dirlinks(self) -> Generator[str, None, None]:
+        """yield a link to each dir page, all the way back to the root"""
+        assert self.dir
+
+        for i in range(len(self.dirparts)):
+            link = "/" + "/".join(self.reldirparts[: i + 1])
+            yield f'<a href="{ link }.html">{ self.dirparts[i] }</a>'
+
+    def dirlink(self):
+        """return a link to this directory"""
+        assert self.dir
+        href = "/" + "/".join(self.reldirparts) + ".html"
+        return f'<a href="{ href }" class="dirlink">🔗</a>'
 
     def __str__(self):
         if self.dir:
@@ -546,6 +595,16 @@ def generate_index_page(
     )
 
 
+def generate_dir_pages(root: FileTree, pages: Dict[str, Page], outdir: Path) -> None:
+    for child in root.children:
+        if child.dir:
+            info("creating directory file " + str(outdir / f"{child.reldir}.html"))
+            open(outdir / f"{child.reldir}.html", "w").write(
+                render("dir.html", tree=child)
+            )
+            generate_dir_pages(child, pages, outdir)
+
+
 def highlight(code, name, _):
     """Highlight a block of code"""
     if not name:
@@ -731,6 +790,7 @@ def parse(
     # is necessary for the atom file output
     generate_html_pages(pages, outdir)
     generate_index_page(tree, pages, outdir, recent)
+    generate_dir_pages(tree, pages, outdir)
     generate_lastweek_page(pages, outdir)
 
 
