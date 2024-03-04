@@ -13,7 +13,7 @@ import subprocess
 import shutil
 import sys
 from time import strftime, localtime, time
-from typing import Any, DefaultDict, Dict, Generator, List, Optional, Tuple
+from typing import Any, Callable, DefaultDict, Dict, Generator, List, Optional, Tuple
 
 from jinja2 import Environment, FileSystemLoader
 from markdown_it import MarkdownIt
@@ -50,10 +50,10 @@ class Attachment:
     links: List[str]
     backlinks: List[Page | Attachment]
 
-    def __eq__(self, b):
+    def __eq__(self, b) -> bool:
         return b.title == self.title
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(("title", self.title))
 
 
@@ -104,10 +104,10 @@ class Page:
     # the same HTML, escaped for use in the atom feed
     html_escaped_content: str = ""
 
-    def __eq__(self, b):
+    def __eq__(self, b) -> bool:
         return b.title == self.title
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(("title", self.title))
 
     def dirlinks(self) -> Generator[str, None, None]:
@@ -291,7 +291,7 @@ class FileTree:
         self.page = page
         self.children: list[FileTree] = []
 
-    def dir_backlinks(self):
+    def dir_backlinks(self) -> set[Page | Attachment]:
         """return backlinks for all direct children of this node"""
         return set(
             backlink
@@ -300,7 +300,7 @@ class FileTree:
             for backlink in child.page.backlinks
         )
 
-    def has_child_dirs(self):
+    def has_child_dirs(self) -> bool:
         """return true if there are child dirs"""
         return any(child.dir for child in self.children)
 
@@ -312,20 +312,20 @@ class FileTree:
             link = "/" + "/".join(self.reldirparts[: i + 1])
             yield f'<a href="{ link }.html">{ self.dirparts[i] }</a>'
 
-    def dirlink(self):
+    def dirlink(self) -> str:
         """return a link to this directory"""
         assert self.dir
         href = "/" + "/".join(self.reldirparts) + ".html"
         return f'<a href="{ href }" class="dirlink">🔗</a>'
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.dir:
             return os.path.basename(self.dir)
         elif self.page:
             return self.page.title
         raise AssertionError("either page or dir must be true")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
 
@@ -604,7 +604,7 @@ def generate_dir_pages(root: FileTree, pages: Dict[str, Page], outdir: Path) -> 
             generate_dir_pages(child, pages, outdir)
 
 
-def highlight(code, name, _):
+def highlight(code, name, _) -> str:
     """Highlight a block of code"""
     if not name:
         return f'<div class="highlight">{escape(code)}</div>'
@@ -710,7 +710,7 @@ def sanitize(s: str) -> str:
 
 
 # maybe move to https://github.com/jsepia/markdown-it-wikilinks eventually?
-def crosslink_replacer(pages: Dict[str, Page]):
+def crosslink_replacer(pages: Dict[str, Page]) -> Callable[[re.Match], str]:
     def _crosslink_replacer(m: re.Match) -> str:
         rawlink = m.group(1)
         title = rawlink
@@ -759,7 +759,7 @@ def parse(
     recent: int,
     use_git_times: bool,
     ignore: Optional[set[str]] = None,
-):
+) -> None:
     """parse a directory of markdown files, ignoring a list of folder names
 
     mddir: the name of the directory to parse files in
