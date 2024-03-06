@@ -793,24 +793,6 @@ def parse(
     generate_lastweek_page(pages, outdir)
 
 
-# TODO:
-# - better code highlighting
-#   - the first chart on this page is completely busto:
-#     - http://devd.io:8000/book_notes/Understanding_Software_Dynamics/Chapter_1_-_My_program_is_too_slow.html
-#   - it shouldn't highlight at all
-#     - could disable language guessing? But generally I like it?
-#     - maybe just add a language annotation for every block?
-#   - nicer colors (syntax and bg)
-#   - proper overflow out of parent container
-# - navigation pane?
-#     - skipping it for now, but some sort of collapsible sidebar sounds nice?
-# - better table formatting
-#   - borders
-# - table of contents for big pages
-#   - there appears to be no toc plugin for mdit-py
-# - add command line arguments default_ignores
-# - admonitions might be nice?
-#   - https://python-markdown.github.io/extensions/admonition/
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
