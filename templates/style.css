@@ -1,164 +1,164 @@
 html {
-    /* fixes font size on iOS */
-    text-size-adjust: none;
-    -webkit-text-size-adjust: none;
+  /* fixes font size on iOS */
+  text-size-adjust: none;
+  -webkit-text-size-adjust: none;
 }
 
 body {
-    font-family: Georgia, "Book Antiqua", serif;
-    font-size: 1.2rem;
-    background-color: #fffff8;
-    margin: 20px;
-    padding: 0;
+  font-family: Georgia, "Book Antiqua", serif;
+  font-size: 1.2rem;
+  background-color: #fffff8;
+  margin: 20px;
+  padding: 0;
 }
 
-p>code,
-li>code {
-    background-color: #eee;
-    padding: 2px;
-    font-size: 1.2rem;
+p > code,
+li > code {
+  background-color: #eee;
+  padding: 2px;
+  font-size: 1rem;
 }
 
 main {
-    color: #111;
-    max-width: 800px;
+  color: #111;
+  max-width: 800px;
 }
 
 @media screen and (max-width: 600px) {
-    body {
-        font-size: 1rem;
-    }
+  body {
+    font-size: 1rem;
+  }
 
-    .recent {
-        display: none;
-    }
+  .recent {
+    display: none;
+  }
 
-    p>code,
-    li>code {
-        background-color: #eee;
-        padding: 1px;
-        font-size: 1rem;
-    }
+  p > code,
+  li > code {
+    background-color: #eee;
+    padding: 1px;
+    font-size: 1rem;
+  }
 
-    main {
-        line-height: 1.5rem;
-        margin: 1.5em auto;
-    }
+  main {
+    line-height: 1.5rem;
+    margin: 1.5em auto;
+  }
 }
 
 @media screen and (min-width: 600px) {
-    main {
-        line-height: 2rem;
-        margin: 2em auto;
-    }
+  main {
+    line-height: 2rem;
+    margin: 2em auto;
+  }
 }
 
 footer {
-    font-size: 1rem;
-    margin-top: 20px;
-    margin-bottom: 100px;
-    text-align: center;
+  font-size: 1rem;
+  margin-top: 20px;
+  margin-bottom: 100px;
+  text-align: center;
 }
 
 blockquote {
-    border-left: 1px solid hsl(298 100% 70%);
-    padding-left: 12px;
+  border-left: 1px solid hsl(298 100% 70%);
+  padding-left: 12px;
 }
 
 div.highlight {
-    font-size: 1rem;
-    padding-left: 1rem;
-    padding-top: 0.05rem;
-    padding-bottom: 0.05rem;
-    /* This is a hack to get the code boxes wider than the parents, but still
+  font-size: 1rem;
+  padding-left: 1rem;
+  padding-top: 0.05rem;
+  padding-bottom: 0.05rem;
+  /* This is a hack to get the code boxes wider than the parents, but still
        in the document flow... I would like to figure out how to get the width
        to be auto-figured-out, but for now I'm just going to set it wide
        because it works-ish */
-    position: relative;
-    overflow: auto;
+  position: relative;
+  overflow: auto;
 }
 
 a {
-    color: hsl(298 100% 40%);
+  color: hsl(298 100% 40%);
 }
 
 a:visited {
-    color: hsl(298 100% 70%);
+  color: hsl(298 100% 70%);
 }
 
 h1 {
-    font-size: 2rem;
-    line-height: 3rem;
+  font-size: 2rem;
+  line-height: 3rem;
 }
 
 h2 {
-    font-size: 1.8rem;
+  font-size: 1.8rem;
 }
 
 table {
-    width: 900px;
+  width: 900px;
 }
 
 thead th {
-    border-bottom: solid 1px #aaa;
+  border-bottom: solid 1px #aaa;
 }
 
 tbody tr td {
-    border-bottom: solid 1px #aaa;
+  border-bottom: solid 1px #aaa;
 }
 
 td {
-    padding: 8px;
+  padding: 8px;
 }
 
 .recent {
-    display: inline-block;
-    width: 130px;
+  display: inline-block;
+  width: 130px;
 }
 
 /* https://iamkate.com/code/tree-views/ */
 .tree {
-    --spacing: 1.5rem;
-    --radius: 10px;
-    /* shove the tree closer to the margin - not sure how to do this better */
-    margin-left: -40px;
+  --spacing: 1.5rem;
+  --radius: 10px;
+  /* shove the tree closer to the margin - not sure how to do this better */
+  margin-left: -40px;
 }
 
 .tree li {
-    display: block;
-    position: relative;
-    padding-left: calc(2 * var(--spacing) - var(--radius) - 2px);
+  display: block;
+  position: relative;
+  padding-left: calc(2 * var(--spacing) - var(--radius) - 2px);
 }
 
 .tree ul {
-    margin-left: calc(var(--radius) - var(--spacing));
-    padding-left: 0;
+  margin-left: calc(var(--radius) - var(--spacing));
+  padding-left: 0;
 }
 
 .tree ul li {
-    border-left: 2px solid #ddd;
+  border-left: 2px solid #ddd;
 }
 
 .tree ul li:last-child {
-    border-color: transparent;
+  border-color: transparent;
 }
 
 .tree ul li::before {
-    content: "";
-    display: block;
-    position: absolute;
-    top: calc(var(--spacing) / -2);
-    left: -2px;
-    width: calc(var(--spacing) + 2px);
-    height: calc(var(--spacing) + 1px);
-    border: solid #ddd;
-    border-width: 0 0 2px 2px;
+  content: "";
+  display: block;
+  position: absolute;
+  top: calc(var(--spacing) / -2);
+  left: -2px;
+  width: calc(var(--spacing) + 2px);
+  height: calc(var(--spacing) + 1px);
+  border: solid #ddd;
+  border-width: 0 0 2px 2px;
 }
 
 .tree summary {
-    /* to remove the disclosure arrow, uncomment this and the following rule */
-    /* display: block; */
-    cursor: pointer;
+  /* to remove the disclosure arrow, uncomment this and the following rule */
+  /* display: block; */
+  cursor: pointer;
 }
 
 /* I think I prefer keeping these?
@@ -168,22 +168,22 @@ td {
 } */
 
 .tree summary:focus {
-    outline: none;
+  outline: none;
 }
 
 .tree summary:focus-visible {
-    outline: 1px dotted #000;
+  outline: 1px dotted #000;
 }
 
 #collapseall {
-    font-size: 1rem;
+  font-size: 1rem;
 }
 
 video {
-    width: 100%;
+  width: 100%;
 }
 
 .dirlink {
-    text-decoration: none;
-    font-size: 14px;
+  text-decoration: none;
+  font-size: 14px;
 }
