@@ -14,7 +14,7 @@ body {
 
 p > code,
 li > code {
-  background-color: #eee;
+  background-color: #f6fcff;
   padding: 2px;
   font-size: 1rem;
 }
@@ -35,7 +35,7 @@ main {
 
   p > code,
   li > code {
-    background-color: #eee;
+    background-color: #f6fcff;
     padding: 1px;
     font-size: 1rem;
   }
