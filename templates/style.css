@@ -97,6 +97,7 @@ h2 {
 
 table {
   width: 900px;
+  border-collapse: collapse;
 }
 
 thead th {
