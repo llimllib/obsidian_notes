@@ -13,7 +13,7 @@ import subprocess
 import shutil
 import sys
 from time import strftime, localtime, time
-from typing import Any, Callable, DefaultDict, Dict, Generator, List, Optional, Tuple
+from typing import Any, Callable, DefaultDict, Generator, Optional
 
 from jinja2 import Environment, FileSystemLoader
 from markdown_it import MarkdownIt
@@ -47,8 +47,8 @@ class Attachment:
     link_path: str
     file: str
     relpath: str
-    links: List[str]
-    backlinks: List[Page | Attachment]
+    links: list[str]
+    backlinks: set[Page | Attachment]
 
     def __eq__(self, b) -> bool:
         return b.title == self.title
@@ -78,11 +78,11 @@ class Page:
     link_path: str
 
     # links is a list of (what, exactly?)
-    links: List[str]
-    # backlinks is
-    backlinks: List[Page | Attachment]
+    links: list[str]
 
-    frontmatter: Dict[str, Any]
+    backlinks: set[Page | Attachment]
+
+    frontmatter: dict[str, Any]
 
     # the mtime of the file
     mtime: float
@@ -133,7 +133,7 @@ def err(msg: str, *args) -> None:
 FRONT_MATTER_RE = re.compile(r"^\s*---(.*?)\n---\n", re.S)
 
 
-def parse_frontmatter(raw_fm: str) -> Dict[str, Any]:
+def parse_frontmatter(raw_fm: str) -> dict[str, Any]:
     """parse yaml frontmatter and return a dictionary. yaml could be any data
     type, but in this context we're expecting to get a dict out of this, so
     throw an exception if we find anything else"""
@@ -145,7 +145,7 @@ def parse_frontmatter(raw_fm: str) -> Dict[str, Any]:
     return anything
 
 
-def split_front_matter(buf: str) -> Tuple[Dict[str, Any], str]:
+def split_front_matter(buf: str) -> tuple[dict[str, Any], str]:
     """split the front matter from the rest of the markdown document's content.
     Parse the front matter if present."""
     parts = FRONT_MATTER_RE.split(buf, 1)
@@ -223,7 +223,7 @@ def strip_fancy_name(link: str) -> str:
 LINK_RE = re.compile(r"\[\[(.*?)\]\]")
 
 
-def findlinks(md: str) -> List[str]:
+def findlinks(md: str) -> list[str]:
     """Find all links in a markdown document"""
     # XXX: right now this grabs some "links" from code blocks; i.e. pandas lets
     #      you do stuff like df[["columnA", "columnB"]]. Fix the regex so it
@@ -250,7 +250,7 @@ def canonical_path(relative_path: str) -> str:
 
 
 def find(
-    pages: Dict[str, Page], attachments: Dict[str, Attachment], link: str
+    pages: dict[str, Page], attachments: dict[str, Attachment], link: str
 ) -> Optional[Page | Attachment]:
     """find a page referred to by `link`
 
@@ -270,7 +270,7 @@ def find(
             return attach
 
 
-def split_files(files: List[str]) -> Tuple[List[str], List[str]]:
+def split_files(files: list[str]) -> tuple[list[str], list[str]]:
     """Split a file list into markdown and non-markdown files"""
     return (
         [f for f in files if f.endswith(".md")],
@@ -388,7 +388,13 @@ def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
             # if use_git_times is true, assume that the file is stored in git,
             # and get ctime and mtime from git.
             if use_git_times:
-                t = gitstat(dir, path)
+                try:
+                    t = gitstat(dir, path)
+                # if the file is not in git, the function currently throws an
+                # IndexError. Take the mtime in that case instead, rather
+                # than failing
+                except IndexError:
+                    t = os.stat(path)
             else:
                 t = os.stat(path)
 
@@ -404,7 +410,7 @@ def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
                 relpath=relpath,
                 titlepath=titlepath,
                 source=source,
-                backlinks=[],
+                backlinks=set(),
                 frontmatter=frontmatter,
                 mtime=t.st_mtime,
                 # would be better to put file creation time in front matter
@@ -428,13 +434,13 @@ def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
         file=filename,
         relpath=relpath,
         links=[],
-        backlinks=[],
+        backlinks=set(),
     )
 
 
 def build_file_tree(
     dir: str, ignore: set[str], use_git_times: bool
-) -> Tuple[FileTree, Dict[str, Page], Dict[str, Attachment]]:
+) -> tuple[FileTree, dict[str, Page], dict[str, Attachment]]:
     """build a file tree from a given directory
 
     dir: the directory to build the file tree from
@@ -476,8 +482,8 @@ def build_file_tree_helper(
     node: FileTree,
     ignore: set[str],
     root_path: str,
-    index: Dict[str, Page],
-    attachments: Dict[str, Attachment],
+    index: dict[str, Page],
+    attachments: dict[str, Attachment],
     use_git_times: bool,
 ) -> FileTree:
     assert node.dir
@@ -532,7 +538,7 @@ def build_file_tree_helper(
 
 
 def calculate_backlinks(
-    pages: Dict[str, Page], attachments: Dict[str, Attachment]
+    pages: dict[str, Page], attachments: dict[str, Attachment]
 ) -> None:
     for page in pages.values():
         for link in page.links:
@@ -540,12 +546,12 @@ def calculate_backlinks(
             if not linked_page:
                 info(f"unable to find link", link, page.title)
                 continue
-            linked_page.backlinks.append(page)
+            linked_page.backlinks.add(page)
 
 
-def generate_lastweek_page(pages: Dict[str, Page], outdir: Path) -> None:
+def generate_lastweek_page(pages: dict[str, Page], outdir: Path) -> None:
     today = datetime.today()
-    pages_by_weeks_ago: DefaultDict[int, List[Page]] = defaultdict(list)
+    pages_by_weeks_ago: DefaultDict[int, list[Page]] = defaultdict(list)
     for p in reversed(sorted(pages.values(), key=lambda x: x.mtime)):
         daysago = (today - datetime.fromtimestamp(p.mtime)).days
         pages_by_weeks_ago[(daysago - 1) // 7].append(p)
@@ -557,22 +563,23 @@ def generate_lastweek_page(pages: Dict[str, Page], outdir: Path) -> None:
     )
 
 
-def generate_search(pages: Dict[str, Page], outdir: Path) -> None:
-    index = [
-        {
+def generate_search(pages: dict[str, Page], outdir: Path) -> None:
+    index = {
+        i: {
+            "id": i,
             "title": page.title,
             "contents": page.source,
             "title_path": page.titlepath,
             "link_path": page.link_path,
         }
-        for page in pages.values()
-    ]
+        for (i, page) in enumerate(pages.values())
+    }
 
     open(outdir / "search.html", "w").write(render("search.html", index=index))
 
 
 def generate_index_page(
-    tree: FileTree, pages: Dict[str, Page], outdir: Path, recent: int
+    tree: FileTree, pages: dict[str, Page], outdir: Path, recent: int
 ) -> None:
     by_mtime = list(reversed(sorted(pages.values(), key=lambda x: x.mtime)))
     open(outdir / "index.html", "w").write(
@@ -595,7 +602,7 @@ def generate_index_page(
     )
 
 
-def generate_dir_pages(root: FileTree, pages: Dict[str, Page], outdir: Path) -> None:
+def generate_dir_pages(root: FileTree, pages: dict[str, Page], outdir: Path) -> None:
     for child in root.children:
         if child.dir:
             open(outdir / f"{child.reldir}.html", "w").write(
@@ -634,7 +641,7 @@ def render_content(page: Page) -> str:
     return MD.render(page.source)
 
 
-def generate_html_pages(pages: Dict[str, Page], outdir: Path) -> None:
+def generate_html_pages(pages: dict[str, Page], outdir: Path) -> None:
     for page in pages.values():
         output_path = outdir / page.link_path
 
@@ -652,13 +659,13 @@ def generate_html_pages(pages: Dict[str, Page], outdir: Path) -> None:
             fout.write(text)
 
 
-def copy_attachments(attachments: Dict[str, Attachment], outdir: Path) -> None:
+def copy_attachments(attachments: dict[str, Attachment], outdir: Path) -> None:
     for page in attachments.values():
         mkdir(outdir / page.relpath)
         shutil.copy(page.fullpath, outdir / page.link_path)
 
 
-def attachment_replacer(pages: Dict[str, Page], attachments: Dict[str, Attachment]):
+def attachment_replacer(pages: dict[str, Page], attachments: dict[str, Attachment]):
     def _attachment_replacer(m: re.Match) -> str:
         filename = m.group(1)
         linked_attch = find(pages, attachments, filename)
@@ -684,7 +691,7 @@ IMAGE_LINK_RE = re.compile(r"!\[\[(.*?)\]\]")
 
 
 def substitute_images(
-    pages: Dict[str, Page], attachments: Dict[str, Attachment]
+    pages: dict[str, Page], attachments: dict[str, Attachment]
 ) -> None:
     replacer = attachment_replacer(pages, attachments)
     for page in pages.values():
@@ -710,7 +717,7 @@ def sanitize(s: str) -> str:
 
 
 # maybe move to https://github.com/jsepia/markdown-it-wikilinks eventually?
-def crosslink_replacer(pages: Dict[str, Page]) -> Callable[[re.Match], str]:
+def crosslink_replacer(pages: dict[str, Page]) -> Callable[[re.Match], str]:
     def _crosslink_replacer(m: re.Match) -> str:
         rawlink = m.group(1)
         title = rawlink
@@ -748,7 +755,7 @@ def crosslink_replacer(pages: Dict[str, Page]) -> Callable[[re.Match], str]:
 CROSSLINK_RE = re.compile(r"\[\[(.*?)\]\]")
 
 
-def substitute_crosslinks(pages: Dict[str, Page]) -> None:
+def substitute_crosslinks(pages: dict[str, Page]) -> None:
     replacer = crosslink_replacer(pages)
     for page in pages.values():
         page.source = CROSSLINK_RE.sub(replacer, page.source)
