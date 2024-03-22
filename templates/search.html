@@ -17,17 +17,17 @@
   <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
   </script>
   <script id="search_algo" type="module">
-    import Fuse from "https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.esm.js";
+    import FlexSearch from 'https://cdn.jsdelivr.net/npm/flexsearch@0.7.43/+esm'
 
-    const index = {{ index|tojson }};
-
-    const options = {
-      includeMatches: true,
-      includeScore: true,
-      keys: ["title", "contents"],
-      useExtendedSearch: true,
-    };
-    const fuse = new Fuse(index, options);
+    const index = new FlexSearch.Document({
+      context: true,
+      document: {
+        index: ["title", "contents"],
+      }
+    });
+    const documents = {{index | tojson }};
+    Object.values(documents).forEach(doc => index.add(doc));
+    window.windex = index;
 
     function render(tag, attributes, ...children) {
       const elt = document.createElement(tag);
@@ -49,25 +49,24 @@
         return;
       }
 
-      const result = fuse.search(query);
+      const result = index.search(query, {limit: 25}).map(x => x.result).flat();
+      console.log(result);
 
-      for (let i = 0; i < Math.min(25, result.length); i++) {
-        const { contents, link_path, title_path } = result[i].item;
-        const indices = result[i].matches.filter((x) => x.key === "contents")[0]
-          ?.indices;
+      for (let i of result.splice(0, 25)) {
+        const {contents, link_path, title_path} = documents[i];
         resultsList.appendChild(
           render(
             "li",
-            { class: "result" },
+            {class: "result"},
             render(
               "a",
-              { class: "title_path", href: `../${link_path}` },
+              {class: "title_path", href: `../${link_path}`},
               title_path
             ),
             render(
               "div",
-              { class: "contents" },
-              contents.substring(indices ? indices[0][0] : 0, 255)
+              {class: "contents"},
+              contents.replace(/<[^>]+>/gi, "").substring(0, 255)
             )
           )
         );
@@ -90,29 +89,33 @@
   <!-- visitor counter that does not track personal info -->
   <script data-goatcounter="https://goatcounter.billmill.org/count" async
     src="//goatcounter.billmill.org/count.js"></script>
-<style>
-#searchContainer {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-#search {
-  width: 75%;
-  font-size: 2rem;
-  padding: 5px;
-}
-.title_path {
-  font-size: 1.1em;
-  padding-bottom: .25em;
-}
-ul {
-  list-style-type: none;
-}
-li {
-  padding-top: 1em;
-}
-</style>
+  <style>
+    #searchContainer {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #search {
+      width: 75%;
+      font-size: 2rem;
+      padding: 5px;
+    }
+
+    .title_path {
+      font-size: 1.1em;
+      padding-bottom: .25em;
+    }
+
+    ul {
+      list-style-type: none;
+    }
+
+    li {
+      padding-top: 1em;
+    }
+  </style>
   <link rel="stylesheet" href="/style.css" type="text/css" />
   <link rel="stylesheet" href="/pygments.css" type="text/css" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="/atom.xml">
