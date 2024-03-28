@@ -15,6 +15,7 @@ import sys
 from time import strftime, localtime, time
 from typing import Any, Callable, DefaultDict, Generator, Optional
 
+from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
 from markdown_it import MarkdownIt
 import yaml
@@ -564,16 +565,16 @@ def generate_lastweek_page(pages: dict[str, Page], outdir: Path) -> None:
 
 
 def generate_search(pages: dict[str, Page], outdir: Path) -> None:
-    index = {
-        i: {
+    index = [
+        {
             "id": i,
             "title": page.title,
-            "contents": page.source,
+            "contents": BeautifulSoup(page.html).get_text(),
             "title_path": page.titlepath,
             "link_path": page.link_path,
         }
         for (i, page) in enumerate(pages.values())
-    }
+    ]
 
     open(outdir / "search.html", "w").write(render("search.html", index=index))
 
@@ -646,8 +647,10 @@ def generate_html_pages(pages: dict[str, Page], outdir: Path) -> None:
         output_path = outdir / page.link_path
 
         # Optimization: If the file has already been converted to HTML and the
-        # HTML is newer than the source, don't regenerate the file
+        # HTML is newer than the source, don't regenerate the file. Do convert
+        # the markdown to HTML because we'll need that
         if os.path.isfile(output_path) and page.mtime < os.stat(output_path).st_mtime:
+            page.html = render_content(page)
             continue
 
         page.html = render_content(page)
@@ -790,11 +793,10 @@ def parse(
     substitute_images(pages, attachments)
     substitute_crosslinks(pages)
 
-    generate_search(pages, outdir)
-
     # should come before generate_index_page because it generates the HTML that
     # is necessary for the atom file output
     generate_html_pages(pages, outdir)
+    generate_search(pages, outdir)
     generate_index_page(tree, pages, outdir, recent)
     generate_dir_pages(tree, pages, outdir)
     generate_lastweek_page(pages, outdir)

@@ -17,16 +17,18 @@
   <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
   </script>
   <script id="search_algo" type="module">
-    import FlexSearch from 'https://cdn.jsdelivr.net/npm/flexsearch@0.7.43/+esm'
+    import MiniSearch from 'https://cdn.jsdelivr.net/npm/minisearch@6.3.0/+esm'
 
-    const index = new FlexSearch.Document({
-      context: true,
-      document: {
-        index: ["title", "contents"],
+    const index = new MiniSearch({
+      fields: ['title', 'contents'],
+      storeFields: ['contents', 'title', 'title_path', 'link_path'],
+      searchOptions: {
+        boost: {title: 2},
+        fuzzy: 0.2
       }
     });
     const documents = {{index | tojson }};
-    Object.values(documents).forEach(doc => index.add(doc));
+    index.addAll(documents);
     window.windex = index;
 
     function render(tag, attributes, ...children) {
@@ -43,17 +45,27 @@
     function search() {
       const resultsList = document.querySelector("#results");
       resultsList.innerHTML = "";
+      const suggestions = document.querySelector("#suggestions");
+      suggestions.innerHTML = "";
 
       const query = document.querySelector("#search").value;
       if (query === "") {
         return;
       }
 
-      const result = index.search(query, {limit: 25}).map(x => x.result).flat();
-      console.log(result);
+      // populate the suggestion box
+      const seen = new Set();
+      for (let suggest of index.autoSuggest(query).splice(0, 15)) {
+        if (query == suggest.terms[0]) {continue;}
+        if (seen.has(suggest.terms[0])) {continue;}
+        seen.add(suggest.terms[0]);
+        suggestions.appendChild(render("option", {value: suggest.terms[0]}));
+      }
 
+      const result = index.search(query);
       for (let i of result.splice(0, 25)) {
-        const {contents, link_path, title_path} = documents[i];
+        const {contents, link_path, title_path, terms} = i;
+        const highlight = new RegExp(`(${terms.join("|")})`, "gi")
         resultsList.appendChild(
           render(
             "li",
@@ -61,12 +73,14 @@
             render(
               "a",
               {class: "title_path", href: `../${link_path}`},
-              title_path
+              ...title_path.split(highlight).filter(m => m).map(m => m.match(highlight) ?
+                render("span", {class: "highlight"}, m) : m)
             ),
             render(
               "div",
               {class: "contents"},
-              contents.replace(/<[^>]+>/gi, "").substring(0, 255)
+              ...contents.split(highlight).filter(m => m).map(m => m.match(highlight) ?
+                render("span", {class: "highlight"}, m) : m)
             )
           )
         );
@@ -115,6 +129,10 @@
     li {
       padding-top: 1em;
     }
+
+    .highlight {
+      background-color: #9dea92;
+    }
   </style>
   <link rel="stylesheet" href="/style.css" type="text/css" />
   <link rel="stylesheet" href="/pygments.css" type="text/css" />
@@ -125,7 +143,8 @@
 <body>
   <main class="container">
     <div id="searchContainer">
-      <input id="search" placeholder="query" value="">
+      <input id="search" placeholder="query" value="" list="suggestions" autocomplete="off">
+      <datalist id="suggestions"></datalist>
     </div>
     <div>
       <ul id="results">

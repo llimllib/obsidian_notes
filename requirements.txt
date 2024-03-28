@@ -1,3 +1,4 @@
+beautifulsoup4
 Jinja2
 linkify-it-py
 markdown-it-py
