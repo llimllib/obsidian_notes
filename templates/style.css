@@ -194,6 +194,6 @@ a.external-link {
     background-image: url(/out.svg);
     background-position: center right;
     background-repeat: no-repeat;
-    background-size: 0.857em;
-    padding-right: 1em;
+    background-size: 0.7em;
+    padding-right: .8em;
 }
