@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import annotations
+from custom_pygments_style import LlimllibStyle
 
 import argparse
 from collections import defaultdict
@@ -29,6 +29,7 @@ from mdit_py_plugins.front_matter import front_matter_plugin  # type: ignore
 from pygments import highlight as pygmentize
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
+
 from strict_rfc3339 import timestamp_to_rfc3339_utcoffset, rfc3339_to_timestamp
 
 JINJA = Environment(loader=FileSystemLoader("templates"))
@@ -49,7 +50,7 @@ class Attachment:
     file: str
     relpath: str
     links: list[str]
-    backlinks: set[Page | Attachment]
+    backlinks: set["Page | Attachment"]
 
     def __eq__(self, b) -> bool:
         return b.title == self.title
@@ -81,7 +82,7 @@ class Page:
     # links is a list of (what, exactly?)
     links: list[str]
 
-    backlinks: set[Page | Attachment]
+    backlinks: set["Page | Attachment"]
 
     frontmatter: dict[str, Any]
 
@@ -195,16 +196,15 @@ def render(template: str, **kwargs) -> str:
 
 def generate_stylesheet(style: str = "default") -> None:
     """Use pygments to generate a stylesheet"""
-    subprocess.call(
-        f".venv/bin/pygmentize -S {style} -f html -a div.highlight > output/pygments.css",
-        shell=True,
-    )
+    with open(f"output/pygments.css", "w") as f:
+        f.write(HtmlFormatter(style=LlimllibStyle).get_style_defs())
 
 
-def copy_stylesheet(from_dir: Path, to_dir: Path) -> None:
+def copy_static(from_dir: Path, to_dir: Path) -> None:
     """Copy stylesheet from the templates dir to output"""
-    for f in from_dir.glob("*.css"):
-        shutil.copy(f, to_dir)
+    for ext in ["*.css", "*.svg"]:
+        for f in from_dir.glob(ext):
+            shutil.copy(f, to_dir)
 
 
 def strip_fancy_name(link: str) -> str:
@@ -569,7 +569,7 @@ def generate_search(pages: dict[str, Page], outdir: Path) -> None:
         {
             "id": i,
             "title": page.title,
-            "contents": BeautifulSoup(page.html).get_text(),
+            "contents": BeautifulSoup(page.html, features="html.parser").get_text(),
             "title_path": page.titlepath,
             "link_path": page.link_path,
         }
@@ -633,6 +633,14 @@ MD = (
     .use(front_matter_plugin)
     .use(footnote_plugin)
 )
+
+
+def render_link(self, tokens, idx, options, env):
+    tokens[idx].attrSet("class", "external-link")
+    return self.renderToken(tokens, idx, options, env)
+
+
+MD.add_render_rule("link_open", render_link)
 
 
 def render_content(page: Page) -> str:
@@ -747,7 +755,7 @@ def crosslink_replacer(pages: dict[str, Page]) -> Callable[[re.Match], str]:
         linktitle = nicetitle if nicetitle else title
         anchor = f"#{sanitize(anchor)}" if anchor else ""
 
-        return f'<a href="/{linked_page.link_path}{anchor}">{linktitle}</a>'
+        return f'<a href="/{linked_page.link_path}{anchor}" class="internal-link">{linktitle}</a>'
 
     return _crosslink_replacer
 
@@ -787,7 +795,7 @@ def parse(
     outdir = Path(mkdir("./output"))
 
     generate_stylesheet()
-    copy_stylesheet(Path("./templates"), outdir)
+    copy_static(Path("./templates"), outdir)
     copy_attachments(attachments, outdir)
 
     substitute_images(pages, attachments)
