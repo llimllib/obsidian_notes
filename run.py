@@ -292,6 +292,24 @@ class FileTree:
         self.page = page
         self.children: list[FileTree] = []
 
+    def child_pages(self, idx=None) -> dict[str, Page]:
+        if not isinstance(idx, dict):
+            idx = {}
+        for c in self.children:
+            if isinstance(c.page, Page):
+                idx[c.page.titlepath] = c.page
+            elif c.dir:
+                c.child_pages(idx)
+        return idx
+
+    def find_dir(self, dir: str) -> Optional["FileTree"]:
+        if self.reldirparts[-1] == dir:
+            return self
+        for subdir in (c for c in self.children if c.dir):
+            d = subdir.find_dir(dir)
+            if d:
+                return d
+
     def dir_backlinks(self) -> set[Page | Attachment]:
         """return backlinks for all direct children of this node"""
         return set(
@@ -376,9 +394,6 @@ def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
     if extension == ".md":
         with open(path) as f:
             buf = f.read()
-            # TODO: do something with the front matter - rn none of my
-            # files actually have any
-            # https://help.obsidian.md/Advanced+topics/YAML+front+matter
             frontmatter, source = split_front_matter(buf)
             links = findlinks(source)
             dir, filename = os.path.split(path)
@@ -591,16 +606,36 @@ def generate_index_page(
         )
     )
 
-    # the posts may not have been rendered - if so, render them. We need to
-    # have the rendered HTML so we can generate the atom summaries
+
+def generate_feed(pages: dict[str, Page], outfile: Path, recent: int) -> None:
+    """generate a single feed file from the atom.xml template"""
+    by_mtime = list(reversed(sorted(pages.values(), key=lambda x: x.mtime)))
+
     posts = by_mtime[:recent]
     for p in posts:
         if not p.html_escaped_content:
             p.html_escaped_content = escape(render_content(p))
 
-    open(outdir / "atom.xml", "w").write(
+    open(outfile, "w").write(
         render("atom.xml", posts=by_mtime[:recent], timestamp=rfc3339_time(time()))
     )
+
+
+def generate_feeds(
+    tree: FileTree, pages: dict[str, Page], feeds: list[str], outdir: Path, recent: int
+) -> None:
+    """
+    generate an atom feed for the root tree, then go through each sub-feed in
+    the feeds array, find the directory with that name, and generate a feed for
+    it
+    """
+    generate_feed(pages, outdir / "atom.xml", recent)
+
+    for feed in feeds:
+        subtree = tree.find_dir(feed)
+        if not subtree:
+            raise ValueError(f"unable to find {feed}")
+        generate_feed(subtree.child_pages(), outdir / f"{feed}.atom.xml", recent)
 
 
 def generate_dir_pages(root: FileTree, pages: dict[str, Page], outdir: Path) -> None:
@@ -777,6 +812,7 @@ def parse(
     recent: int,
     use_git_times: bool,
     ignore: Optional[set[str]] = None,
+    feeds: list[str] = [],
 ) -> None:
     """parse a directory of markdown files, ignoring a list of folder names
 
@@ -806,6 +842,7 @@ def parse(
     generate_html_pages(pages, outdir)
     generate_search(pages, outdir)
     generate_index_page(tree, pages, outdir, recent)
+    generate_feeds(tree, pages, feeds, outdir, recent)
     generate_dir_pages(tree, pages, outdir)
     generate_lastweek_page(pages, outdir)
 
@@ -829,6 +866,12 @@ if __name__ == "__main__":
         action="store_true",
         help="use git modified time instead of mtime for file timestamps",
     )
+    parser.add_argument(
+        "--feed",
+        action="append",
+        default=[],
+        help="a directory to generate a separate feed for. Can be given multiple times",
+    )
     args = parser.parse_args(sys.argv[1:])
 
     default_ignores = {
@@ -844,4 +887,5 @@ if __name__ == "__main__":
         args.recent,
         args.use_git_times,
         ignore=default_ignores,
+        feeds=args.feed,
     )
