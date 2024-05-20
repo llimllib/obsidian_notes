@@ -49,6 +49,17 @@
     <a href="/link_blog.atom.xml">link blog</a> ⁜
     <a href="/music_blog.atom.xml">music blog</a> ⁜
     <a href="/blog.atom.xml">blog blog</a>
+    <h2>Recently Created</h2>
+    <ul>
+      {% for page in recently_created %}
+      <li>
+        <span class="recent">
+          {{ page.updated_date }}
+        </span>
+        <a href="{{ page.link_path }}">{{ page.titlepath }}</a>
+      </li>
+      {% endfor %}
+    </ul>
     <h2>Recently Updated</h2>
     <ul>
       {% for page in recently_updated %}

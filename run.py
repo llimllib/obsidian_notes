@@ -42,6 +42,12 @@ class GitStat:
 
 
 @dataclass
+class FileStat:
+    st_mtime: float
+    st_ctime: float
+
+
+@dataclass
 class Attachment:
     title: str
     canon_title: str
@@ -88,6 +94,7 @@ class Page:
 
     # the mtime of the file
     mtime: float
+    ctime: float
 
     # file creation and modification time, ISO timestamped
     rfc3339_ctime: str
@@ -194,7 +201,7 @@ def render(template: str, **kwargs) -> str:
     return JINJA.get_template(template).render(**kwargs)
 
 
-def generate_stylesheet(style: str = "default") -> None:
+def generate_stylesheet() -> None:
     """Use pygments to generate a stylesheet"""
     with open(f"output/pygments.css", "w") as f:
         f.write(HtmlFormatter(style=LlimllibStyle).get_style_defs())
@@ -369,7 +376,7 @@ def gitstat(dir: str, path: str) -> GitStat:
     # tremendous amount
     times = (
         subprocess.check_output(
-            ["git", "-C", dir, "log", "--pretty=format:%aI %cI", path]
+            ["git", "-C", dir, "log", "--pretty=format:%aI %cI", "--", path]
         )
         .decode("utf8")
         .split("\n")
@@ -378,7 +385,7 @@ def gitstat(dir: str, path: str) -> GitStat:
     # The modified time is the second timestamp on the first line
     mtime = rfc3339_to_timestamp(times[0].split(" ")[1])
 
-    # The created time is the first timestamp on the last line
+    # ctime is not useful, I should remove this from here
     ctime = rfc3339_to_timestamp(times[-1].split(" ")[0])
 
     return GitStat(st_mtime=mtime, st_ctime=ctime)
@@ -401,9 +408,14 @@ def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
             title, _ = os.path.splitext(filename)
             titlepath = os.path.join(relpath, canonicalize(title))
 
+            if "updated" in frontmatter and "created" in frontmatter:
+                t = FileStat(
+                    rfc3339_to_timestamp(frontmatter["updated"]),
+                    rfc3339_to_timestamp(frontmatter["created"]),
+                )
             # if use_git_times is true, assume that the file is stored in git,
             # and get ctime and mtime from git.
-            if use_git_times:
+            elif use_git_times:
                 try:
                     t = gitstat(dir, path)
                 # if the file is not in git, the function currently throws an
@@ -428,6 +440,7 @@ def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
                 source=source,
                 backlinks=set(),
                 frontmatter=frontmatter,
+                ctime=t.st_ctime,
                 mtime=t.st_mtime,
                 # would be better to put file creation time in front matter
                 # at file create time and pull it from there, but this will
@@ -597,11 +610,26 @@ def generate_search(pages: dict[str, Page], outdir: Path) -> None:
 def generate_index_page(
     tree: FileTree, pages: dict[str, Page], outdir: Path, recent: int
 ) -> None:
-    by_mtime = list(reversed(sorted(pages.values(), key=lambda x: x.mtime)))
+    # get the most recently created files
+    by_ctime = list(reversed(sorted(pages.values(), key=lambda x: x.ctime)))[:recent]
+    recently_created = [p.link_path for p in by_ctime]
+    by_mtime = list(
+        reversed(
+            sorted(
+                (
+                    p
+                    for p in pages.values()
+                    if p.link_path not in recently_created and p.mtime != p.ctime
+                ),
+                key=lambda x: x.mtime,
+            )
+        )
+    )[:recent]
     open(outdir / "index.html", "w").write(
         render(
             "index.html",
-            recently_updated=by_mtime[:recent],
+            recently_created=by_ctime,
+            recently_updated=by_mtime,
             tree=tree,
         )
     )
