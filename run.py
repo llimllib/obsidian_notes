@@ -391,6 +391,19 @@ def gitstat(dir: str, path: str) -> GitStat:
     return GitStat(st_mtime=mtime, st_ctime=ctime)
 
 
+def parse_fm_datetime(d: str | datetime) -> float:
+    """
+    parse a datetime from frontmatter, which may be a string or datetime, into
+    a timestamp
+
+    I don't quite understand why the yaml lib seems to be converting it
+    sometimes, but not others
+    """
+    if isinstance(d, str):
+        return rfc3339_to_timestamp(d)
+    return d.timestamp()
+
+
 def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
     """given a full path and the root of the tree, return a page dict
 
@@ -410,8 +423,8 @@ def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
 
             if "updated" in frontmatter and "created" in frontmatter:
                 t = FileStat(
-                    rfc3339_to_timestamp(frontmatter["updated"]),
-                    rfc3339_to_timestamp(frontmatter["created"]),
+                    parse_fm_datetime(frontmatter["updated"]),
+                    parse_fm_datetime(frontmatter["created"]),
                 )
             # if use_git_times is true, assume that the file is stored in git,
             # and get ctime and mtime from git.
