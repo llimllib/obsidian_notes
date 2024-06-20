@@ -693,6 +693,11 @@ def highlight(code, name, _) -> str:
     if not name:
         return f'<div class="highlight">{escape(code)}</div>'
 
+    # admonishment adapted from mkdocs-material
+    # https://squidfunk.github.io/mkdocs-material/reference/admonitions/
+    if name == "warning":
+        return f'<div class="admon-warning"><p class="warning">{escape(code)}</p></div>'
+
     try:
         lexer = get_lexer_by_name(name)
     except:
