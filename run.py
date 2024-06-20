@@ -20,12 +20,9 @@ from jinja2 import Environment, FileSystemLoader
 from markdown_it import MarkdownIt
 import yaml
 
-# https://github.com/executablebooks/mdit-py-plugins/pull/91 fixes the "not
-# exported" errors pyright reports. Remove the ignore marks once it's merged
-# and we can pull an updated version
-from mdit_py_plugins.anchors import anchors_plugin  # type: ignore
-from mdit_py_plugins.footnote import footnote_plugin  # type: ignore
-from mdit_py_plugins.front_matter import front_matter_plugin  # type: ignore
+from mdit_py_plugins.anchors import anchors_plugin
+from mdit_py_plugins.footnote import footnote_plugin
+from mdit_py_plugins.front_matter import front_matter_plugin
 from pygments import highlight as pygmentize
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
