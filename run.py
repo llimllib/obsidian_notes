@@ -714,7 +714,9 @@ MD = (
 
 
 def render_link(self, tokens, idx, options, env):
-    tokens[idx].attrSet("class", "external-link")
+    # don't count anchor links as external
+    if not tokens[idx].attrs["href"].startswith("#"):
+        tokens[idx].attrSet("class", "external-link")
     return self.renderToken(tokens, idx, options, env)
 
 
