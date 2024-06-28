@@ -707,7 +707,7 @@ def highlight(code, name, _) -> str:
 
 MD = (
     MarkdownIt("gfm-like", {"breaks": True, "html": True, "highlight": highlight})
-    .use(anchors_plugin)
+    .use(anchors_plugin, max_level=6)
     .use(front_matter_plugin)
     .use(footnote_plugin)
 )
