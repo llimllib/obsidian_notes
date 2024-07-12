@@ -37,6 +37,11 @@
     </div>
     <h1 class="title">{{ page.title }}</h1>
     <div class="time">{{ page.updated_date }}</div>
+    <!-- digital ocean spaces has some sort of horrific cloudflare
+       shit enabled that automatically hides email addresses, and it detects
+       mastodon account names as an email address, so I have to put this utter
+       bullshit here -->
+    <!--email_off-->
     {{ page.html }}
     {% if page.backlinks %}
     <div class="backlinks">
@@ -49,6 +54,7 @@
         {% endfor %}
       </ul>
     </div>
+    <!--/email_off-->
     {% endif %}
     <div class="index"><a href="/">↑ up</a></div>
   </main>
