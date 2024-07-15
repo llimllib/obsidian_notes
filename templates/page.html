@@ -36,12 +36,12 @@
       {%- endfor %}
     </div>
     <h1 class="title">{{ page.title }}</h1>
-    <div class="time">{{ page.updated_date }}</div>
     <!-- digital ocean spaces has some sort of horrific cloudflare
        shit enabled that automatically hides email addresses, and it detects
        mastodon account names as an email address, so I have to put this utter
        bullshit here -->
     <!--email_off-->
+    <div class="time"><em>last updated: {{ page.updated_date }}</em></div>
     {{ page.html }}
     {% if page.backlinks %}
     <div class="backlinks">
