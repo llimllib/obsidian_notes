@@ -418,6 +418,10 @@ def handle_file(path: str, root: str, use_git_times: bool) -> Page | Attachment:
             title, _ = os.path.splitext(filename)
             titlepath = os.path.join(relpath, canonicalize(title))
 
+            # get created and modified times for the file. Preference order:
+            # - updated time in frontmatter
+            # - file info from git (if gistat is enabled)
+            # - file modified time from the file system
             if "updated" in frontmatter and "created" in frontmatter:
                 t = FileStat(
                     parse_fm_datetime(frontmatter["updated"]),
