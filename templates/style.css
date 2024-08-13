@@ -1,3 +1,7 @@
+:root {
+  --body-width: 800px;
+}
+
 html {
   /* fixes font size on iOS */
   text-size-adjust: none;
@@ -21,7 +25,7 @@ li > code {
 
 main {
   color: #111;
-  max-width: 800px;
+  max-width: var(--body-width);
 }
 
 @media screen and (max-width: 600px) {
@@ -243,6 +247,10 @@ p.warning::before {
 p.warning {
   padding-left: 3rem;
   position: relative;
+}
+
+.bodyimg {
+  max-width: min(100%, var(--body-width));
 }
 
 /* copied from mkdocs-material

@@ -777,7 +777,7 @@ def attachment_replacer(pages: dict[str, Page], attachments: dict[str, Attachmen
             return f'<video controls><source src="/{path}" type="video/mp4" /><a href="/{path}">download</a></video>'
         elif filename.endswith(".webm"):
             return f'<video controls><source src="/{path}" type="video/webm" /><a href="/{path}">download</a></video>'
-        return f'<a href="/{path}"><img src="/{path}" style="max-width: 800px"></a>'
+        return f'<a href="/{path}"><img class="bodyimg" src="/{path}"></a>'
 
     return _attachment_replacer
 
