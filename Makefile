@@ -1,17 +1,13 @@
 CDN_BUCKET = obsidian_html
-MDPATH ?= "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/personal"
+MDPATH ?= "~/code/obsidian-archive/"
 
-build: requirements
-	.venv/bin/python run.py --path ${MDPATH} --use-git-times --feed link_blog --feed music_blog --feed blog
+build:
+	uv run run.py --path ${MDPATH} --use-git-times --feed link_blog --feed music_blog --feed blog
 	cp favicon.ico output/
 
 # only for use in dev, for quick iteration
 build-quick:
-	.venv/bin/python run.py --path ${MDPATH} --feed link_blog --feed music_blog --feed blog
-
-requirements:
-	if [ ! -d ".venv" ]; then python -mvenv .venv; fi
-	.venv/bin/pip install -r requirements.txt
+	uv run run.py --path ${MDPATH} --feed link_blog --feed music_blog --feed blog
 
 clean:
 	rm -rf output
@@ -34,4 +30,7 @@ flush:
 
 publish: pull build sync flush
 
-.PHONY: build build-quick clean pull requirements serve sync flush publish
+update-dependencies:
+	uv sync
+
+.PHONY: build build-quick clean pull serve sync flush publish update-dependencies

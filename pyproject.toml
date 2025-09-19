@@ -1,3 +1,21 @@
+[project]
+name = "obsidian_notes"
+version = "1.0.0"
+description = "Creates a static website from an obsidian notes folder"
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4",
+    "jinja2",
+    "linkify-it-py",
+    "markdown-it-py",
+    "mdit-py-plugins",
+    "mdx-linkify",
+    "python-markdown-math",
+    "pygments",
+    "PyYAML",
+    "strict-rfc3339",
+]
+
 # https://microsoft.github.io/pyright/#/configuration
 [tool.pyright]
 include = ["."]
@@ -10,7 +28,7 @@ venv = ".venv"
 reportMissingImports = true
 reportMissingTypeStubs = false
 
-pythonVersion = "3.10"
+pythonVersion = "3.13"
 pythonPlatform = "Darwin"
 
 executionEnvironments = [
