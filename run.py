@@ -694,11 +694,6 @@ def highlight(code, name, _) -> str:
     if not name:
         return f'<div class="highlight">{escape(code)}</div>'
 
-    # admonishment adapted from mkdocs-material
-    # https://squidfunk.github.io/mkdocs-material/reference/admonitions/
-    if name == "warning":
-        return f'<div class="admon-warning"><p class="warning">{escape(code)}</p></div>'
-
     try:
         lexer = get_lexer_by_name(name)
     except:
@@ -844,6 +839,50 @@ def crosslink_replacer(pages: dict[str, Page]) -> Callable[[re.Match], str]:
     return _crosslink_replacer
 
 
+CALLOUT_RE = re.compile(r"^>\s*\[!(\w+)\]\s*(.*?)\n((?:>.*\n?)*)", re.MULTILINE)
+
+
+def callout_replacer(m: re.Match) -> str:
+    """Convert Obsidian callouts to HTML"""
+    callout_type = m.group(1).lower()
+    title = m.group(2).strip() or callout_type.capitalize()
+    content = m.group(3)
+
+    # Remove the '>' prefix from each line
+    lines = [
+        line[1:].strip() if line.startswith(">") else line
+        for line in content.split("\n")
+        if line.strip()
+    ]
+    content_text = "\n".join(lines)
+
+    # Map Obsidian types to CSS class names and colors
+    type_map = {
+        "note": "note",
+        "abstract": "abstract",
+        "info": "info",
+        "tip": "tip",
+        "success": "success",
+        "question": "question",
+        "warning": "warning",
+        "failure": "failure",
+        "danger": "danger",
+        "bug": "bug",
+        "example": "example",
+        "quote": "quote",
+        "important": "important",
+        "caution": "warning",
+    }
+    css_class = type_map.get(callout_type, "note")
+
+    return f'\n<div class="admon-{css_class}"><p class="{css_class}-title">{title}</p><p class="{css_class}-content">{content_text}</p></div>\n'
+
+
+def substitute_callouts(pages: dict[str, Page]) -> None:
+    for page in pages.values():
+        page.source = CALLOUT_RE.sub(callout_replacer, page.source)
+
+
 # match:
 # - two open square brackets [[
 # - capture anything up to the closing square bracket pair ]]
@@ -884,6 +923,7 @@ def parse(
     copy_attachments(attachments, outdir)
 
     substitute_images(pages, attachments)
+    substitute_callouts(pages)
     substitute_crosslinks(pages)
 
     # should come before generate_index_page because it generates the HTML that
