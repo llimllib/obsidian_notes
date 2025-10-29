@@ -37,11 +37,10 @@
     <div class="dirlinks" style="margin-bottom: 20px">
       <a href="/">notes.billmill.org</a> /
     </div>
-    <img src="feed.svg" width="15px" /> feeds:
-    <a href="/atom.xml">everything</a> ⁜
-    <a href="/link_blog.atom.xml">link blog</a> ⁜
-    <a href="/music_blog.atom.xml">music blog</a> ⁜
-    <a href="/blog.atom.xml">blog blog</a>
+    <a href="/">everything</a><a href="/atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
+    <a href="/link_blog.html">link blog</a><a href="/link_blog.atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
+    <a href="/music/music_blog.html">music blog</a><a href="/music_blog.atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
+    <a href="/blog.html">blog blog<a href="/blog.atom.xml"><img src="feed.svg" class="feedicon" /></a>
     <h2>Recently Created</h2>
     <ul>
       {% for page in recently_created %}
