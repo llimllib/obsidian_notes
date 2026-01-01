@@ -30,7 +30,27 @@
       {{ link }} /
       {%- endfor %}
     </div>
-    {%- if tree.has_child_dirs() %}
+    {%- if tree.child_dirs_are_numeric() %}
+    {# This is a blog-type tree, and we want to display it in reverse order so
+    that newest is first #}
+    <a id="collapseall" href="#">collapse all</a>
+    <ul class="tree">
+      {%- for node in tree.children|reverse recursive %}
+      {%- if node.children -%}
+      <li>
+        <details open>
+          <summary>{{ node.basename }} {{ node.dirlink() }}</summary>
+          <ul>{{ loop(node.children|reverse) }}</ul>
+        </details>
+      </li>
+      {%- elif not node.page.attachment %}
+      <li>
+        <a href="/{{ node.page.link_path }}">{{ node.page.title }}</a>
+      </li>
+      {%- endif %}
+      {%- endfor %}
+    </ul>
+    {%- elif tree.has_child_dirs() %}
     {# for now just expand all child pages, eventually might want to do
     something smarter? #}
     <a id="collapseall" href="#">collapse all</a>

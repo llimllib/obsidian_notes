@@ -327,6 +327,14 @@ class FileTree:
         """return true if there are child dirs"""
         return any(child.dir for child in self.children)
 
+    def child_dirs_are_numeric(self) -> bool:
+        """return true f the child dirs are numeric
+
+        we do this so that we can sort blog-type pages in reverse order, newest
+        first
+        """
+        return all(child.dir and child.basename.isdigit() for child in self.children)
+
     def dirlinks(self) -> Generator[str, None, None]:
         """yield a link to each dir page, all the way back to the root"""
         assert self.dir
