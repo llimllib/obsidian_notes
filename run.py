@@ -328,7 +328,7 @@ class FileTree:
         return any(child.dir for child in self.children)
 
     def child_dirs_are_numeric(self) -> bool:
-        """return true f the child dirs are numeric
+        """return true if the child dirs are numeric
 
         we do this so that we can sort blog-type pages in reverse order, newest
         first
