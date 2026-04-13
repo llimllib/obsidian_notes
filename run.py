@@ -632,26 +632,29 @@ def generate_search(pages: dict[str, Page], outdir: Path) -> None:
 def generate_index_page(
     tree: FileTree, pages: dict[str, Page], outdir: Path, recent: int
 ) -> None:
-    # get the most recently created files
-    by_ctime = list(reversed(sorted(pages.values(), key=lambda x: x.ctime)))[:recent]
-    recently_created = [p.link_path for p in by_ctime]
-    by_mtime = list(
-        reversed(
-            sorted(
-                (
-                    p
-                    for p in pages.values()
-                    if p.link_path not in recently_created and p.mtime != p.ctime
-                ),
-                key=lambda x: x.mtime,
-            )
-        )
-    )[:recent]
+    def activity(p: Page) -> tuple[float, str, Page]:
+        if p.mtime > p.ctime:
+            return (p.mtime, "updated", p)
+        return (p.ctime, "new", p)
+
+    recent_activity = [
+        {
+            "page": p,
+            "kind": kind,
+            "date": strftime("%b %d", localtime(ts)).lower(),
+            "parent_html": " / ".join(p.dirlinks()),
+        }
+        for (ts, kind, p) in sorted(
+            (activity(p) for p in pages.values()),
+            key=lambda x: x[0],
+            reverse=True,
+        )[:recent]
+    ]
+
     open(outdir / "index.html", "w").write(
         render(
             "index.html",
-            recently_created=by_ctime,
-            recently_updated=by_mtime,
+            recent_activity=recent_activity,
             tree=tree,
         )
     )

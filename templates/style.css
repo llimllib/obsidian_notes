@@ -122,6 +122,82 @@ td {
   width: 130px;
 }
 
+table.activity {
+  width: 100%;
+  max-width: var(--body-width);
+  border-collapse: collapse;
+  line-height: 1.4;
+}
+
+table.activity td {
+  border: none;
+  padding: 0.15em 0.75em 0.15em 0;
+  vertical-align: baseline;
+}
+
+table.activity td:last-child {
+  padding-right: 0;
+}
+
+table.activity .activity-title-cell {
+  width: 100%;
+  font-size: 1.05rem;
+}
+
+table.activity .activity-path {
+  font-size: 0.85rem;
+  color: #8a8570;
+  white-space: nowrap;
+}
+
+table.activity .activity-path a,
+table.activity .activity-path a:visited {
+  color: #8a8570;
+  text-decoration: none;
+}
+
+table.activity .activity-path a:hover {
+  text-decoration: underline;
+}
+
+table.activity .activity-date {
+  font-size: 0.8rem;
+  color: #8a8570;
+  font-variant: small-caps;
+  white-space: nowrap;
+  text-align: right;
+}
+
+table.activity .activity-tag-cell {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.activity-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-variant: small-caps;
+  letter-spacing: 0.03em;
+  padding: 1px 8px;
+  border-radius: 3px;
+}
+
+.activity-new {
+  background-color: #eaf5ea;
+  color: #1a7f37;
+}
+
+.activity-updated {
+  background-color: #eef0f2;
+  color: #5e6670;
+}
+
+@media screen and (max-width: 600px) {
+  table.activity .activity-path {
+    display: none;
+  }
+}
+
 /* https://iamkate.com/code/tree-views/ */
 .tree {
   --spacing: 1.5rem;

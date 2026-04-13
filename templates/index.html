@@ -42,28 +42,23 @@
     <a href="/link_blog.html">link blog</a><a href="/link_blog.atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
     <a href="/music/music_blog.html">music blog</a><a href="/music_blog.atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
     <a href="/blog.html">blog blog</a><a href="/blog.atom.xml"><img src="feed.svg" class="feedicon" /></a>
-    <h2>Recently Created</h2>
-    <ul>
-      {% for page in recently_created %}
-      <li>
-        <span class="recent">
-          {{ page.updated_date }}
-        </span>
-        <a href="{{ page.link_path }}">{{ page.titlepath }}</a>
-      </li>
-      {% endfor %}
-    </ul>
-    <h2>Recently Updated</h2>
-    <ul>
-      {% for page in recently_updated %}
-      <li>
-        <span class="recent">
-          {{ page.updated_date }}
-        </span>
-        <a href="{{ page.link_path }}">{{ page.titlepath }}</a>
-      </li>
-      {% endfor %}
-    </ul>
+    <h2>Recent activity</h2>
+    <table class="activity">
+      <tbody>
+        {% for item in recent_activity %}
+        <tr>
+          <td class="activity-title-cell">
+            <a href="{{ item.page.link_path }}">{{ item.page.title }}</a>
+          </td>
+          <td class="activity-path">{{ item.parent_html | safe }}</td>
+          <td class="activity-date">{{ item.date }}</td>
+          <td class="activity-tag-cell">
+            <span class="activity-tag activity-{{ item.kind }}">{{ item.kind }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
     <h2>All Notes</h2>
     <a id="collapseall" href="#">expand all</a>
     <ul class="tree">
