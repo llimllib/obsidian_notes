@@ -3,11 +3,13 @@ MDPATH ?= "~/code/obsidian-archive/"
 
 build:
 	uv run run.py --path ${MDPATH} --use-git-times --feed link_blog --feed music_blog --feed blog
+	uv run --with 'pagefind[extended]' python -m pagefind --site output --output-subdir _pagefind
 	cp favicon.ico output/
 
 # only for use in dev, for quick iteration
 build-quick:
 	uv run run.py --path ${MDPATH} --feed link_blog --feed music_blog --feed blog
+	uv run --with 'pagefind[extended]' python -m pagefind --site output --output-subdir _pagefind
 
 clean:
 	rm -rf output

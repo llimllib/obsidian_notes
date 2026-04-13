@@ -6,23 +6,9 @@
   <meta property="og:title" content="notes.billmill.org" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://notes.billmill.org" />
-  <!-- I don't have any image for the site, nor an idea for what image ought to represent it. TBD
-  <meta property="og:image" content="" /> -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script>
-    MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']]
-      },
-      svg: {
-        fontCache: 'global'
-      }
-    };
-  </script>
-  <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-  </script>
   <link rel="stylesheet" href="/style.css" type="text/css" />
-  <link rel="stylesheet" href="/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/_pagefind/pagefind-component-ui.css" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="/atom.xml" />
   <link rel="alternate" type="application/atom+xml" title="Link blog" href="/link_blog.atom.xml" />
   <link rel="alternate" type="application/atom+xml" title="Music blog" href="/music_blog.atom.xml" />
@@ -33,14 +19,16 @@
 </head>
 
 <body>
+  <pagefind-modal></pagefind-modal>
   <main class="container">
     <div class="dirlinks" style="margin-bottom: 20px">
       <a href="/">notes.billmill.org</a> /
-      <a href="search.html" class="search">🔍 search</a>
+      <pagefind-modal-trigger class="search"></pagefind-modal-trigger>
     </div>
     <a href="/">everything</a><a href="/atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
     <a href="/link_blog.html">link blog</a><a href="/link_blog.atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
-    <a href="/music/music_blog.html">music blog</a><a href="/music_blog.atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
+    <a href="/music/music_blog.html">music blog</a><a href="/music_blog.atom.xml"><img src="feed.svg"
+        class="feedicon" /></a> ⁜
     <a href="/blog.html">blog blog</a><a href="/blog.atom.xml"><img src="feed.svg" class="feedicon" /></a>
     <h2>Recent activity</h2>
     <table class="activity">
@@ -79,22 +67,24 @@
     </ul>
   </main>
   {% include 'footer.html' %}
-</body>
-<script>
-  window.addEventListener("DOMContentLoaded", async (_evt) => {
-    var expanded = false;
-    document.querySelector("#collapseall").addEventListener("click", () => {
-      if (expanded) {
-        document.querySelectorAll("details").forEach(d => d.open = false)
-        document.querySelector("#collapseall").innerText = "expand all"
-        expanded = false;
-      } else {
-        document.querySelectorAll("details").forEach(d => d.open = true)
-        document.querySelector("#collapseall").innerText = "collapse all"
-        expanded = true;
-      }
+  <script>
+    window.addEventListener("DOMContentLoaded", async (_evt) => {
+      var expanded = false;
+      document.querySelector("#collapseall").addEventListener("click", () => {
+        if (expanded) {
+          document.querySelectorAll("details").forEach(d => d.open = false)
+          document.querySelector("#collapseall").innerText = "expand all"
+          expanded = false;
+        } else {
+          document.querySelectorAll("details").forEach(d => d.open = true)
+          document.querySelector("#collapseall").innerText = "collapse all"
+          expanded = true;
+        }
+      });
     });
-  });
-</script>
+  </script>
+  <script src="/_pagefind/pagefind-component-ui.js" type="module"></script>
+  <pagefind-config bundle-path="/_pagefind/"></pagefind-config>
+</body>
 
 </html>

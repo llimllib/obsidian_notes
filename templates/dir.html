@@ -4,18 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script>
-    MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']]
-      },
-      svg: {
-        fontCache: 'global'
-      }
-    };
-  </script>
-  <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-  </script>
+  <link rel="stylesheet" href="/_pagefind/pagefind-component-ui.css" />
   <link rel="stylesheet" href="/style.css" type="text/css" />
   <link rel="stylesheet" href="/pygments.css" type="text/css" />
   <link rel="alternate" type="application/atom+xml" title="Atom" href="/atom.xml">
@@ -23,13 +12,14 @@
 </head>
 
 <body>
+  <pagefind-modal></pagefind-modal>
   <main class="container">
     <div class="dirlinks" style="margin-bottom: 20px">
       <a href="/">notes.billmill.org</a> /
       {%- for link in tree.dirlinks() %}
       {{ link }} /
       {%- endfor %}
-      <a href="/search.html" class="search">🔍 search</a>
+      <pagefind-modal-trigger class="search"></pagefind-modal-trigger>
     </div>
     {%- if tree.child_dirs_are_numeric() %}
     {# This is a blog-type tree, and we want to display it in reverse order so
@@ -99,22 +89,24 @@
       {%- endif %}
   </main>
   {% include 'footer.html' %}
-</body>
-<script>
-  window.addEventListener("DOMContentLoaded", async (_evt) => {
-    var expanded = true;
-    document.querySelector("#collapseall").addEventListener("click", () => {
-      if (expanded) {
-        document.querySelectorAll("details").forEach(d => d.open = false)
-        document.querySelector("#collapseall").innerText = "expand all"
-        expanded = false;
-      } else {
-        document.querySelectorAll("details").forEach(d => d.open = true)
-        document.querySelector("#collapseall").innerText = "collapse all"
-        expanded = true;
-      }
+  <script>
+    window.addEventListener("DOMContentLoaded", async (_evt) => {
+      var expanded = true;
+      document.querySelector("#collapseall").addEventListener("click", () => {
+        if (expanded) {
+          document.querySelectorAll("details").forEach(d => d.open = false)
+          document.querySelector("#collapseall").innerText = "expand all"
+          expanded = false;
+        } else {
+          document.querySelectorAll("details").forEach(d => d.open = true)
+          document.querySelector("#collapseall").innerText = "collapse all"
+          expanded = true;
+        }
+      });
     });
-  });
-</script>
+  </script>
+  <script src="/_pagefind/pagefind-component-ui.js" type="module"></script>
+  <pagefind-config bundle-path="/_pagefind/"></pagefind-config>
+</body>
 
 </html>

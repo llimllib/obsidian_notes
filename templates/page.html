@@ -23,7 +23,8 @@
   </script>
   <link rel="stylesheet" href="/style.css" type="text/css" />
   <link rel="stylesheet" href="/pygments.css" type="text/css" />
-  <link rel="alternate" type="application/atom+xml" title="Atom" href="/atom.xml">
+  <link rel="stylesheet" href="/_pagefind/pagefind-component-ui.css" />
+  <link rel="alternate" type="application/atom+xml" title="Atom" href="/atom.xml" />
   <link rel="alternate" type="application/atom+xml" title="Link blog" href="/link_blog.atom.xml" />
   <link rel="alternate" type="application/atom+xml" title="Music blog" href="/music_blog.atom.xml" />
   <link rel="alternate" type="application/atom+xml" title="blog" href="/blog.atom.xml" />
@@ -33,13 +34,14 @@
 </head>
 
 <body>
+  <pagefind-modal></pagefind-modal>
   <main class="container">
     <div class="dirlinks" style="margin-bottom: 20px">
       <a href="/">notes.billmill.org</a> /
       {%- for link in page.dirlinks() %}
       {{ link }} /
       {%- endfor %}
-      <a href="/search.html" class="search">🔍 search</a>
+      <pagefind-modal-trigger class="search"></pagefind-modal-trigger>
     </div>
     <h1 class="title">{{ page.title }}</h1>
     <!-- digital ocean spaces has some sort of horrific cloudflare
@@ -63,6 +65,8 @@
     <div class="index"><a href="/">↑ up</a></div>
   </main>
   {% include 'footer.html' %}
+  <script src="/_pagefind/pagefind-component-ui.js" type="module"></script>
+  <pagefind-config bundle-path="/_pagefind/"></pagefind-config>
 </body>
 
 </html>
