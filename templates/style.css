@@ -601,3 +601,36 @@ p.important-content {
   padding-left: 5px;
   padding-right: 5px;
 }
+
+.backlinks {
+  margin-top: 3rem;
+  padding: 0.8rem 1rem;
+  background-color: #f6f3e0;
+  border: 1px solid #e4e0cf;
+  border-radius: 0.2rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.backlinks-label {
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  font-weight: bold;
+  color: #6a6758;
+  margin-bottom: 0.3em;
+}
+
+.backlinks ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.backlinks ul li {
+  display: inline;
+}
+
+.backlinks ul li:not(:last-child)::after {
+  content: " · ";
+  color: #a39f8a;
+}

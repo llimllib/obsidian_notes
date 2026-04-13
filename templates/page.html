@@ -51,12 +51,10 @@
     {{ page.html }}
     {% if page.backlinks %}
     <div class="backlinks">
-      Backlinks:
+      <div class="backlinks-label">Backlinks</div>
       <ul>
         {% for backlink in page.backlinks %}
-        <li>
-          <a href="/{{ backlink.link_path }}">{{ backlink.title }}</a>
-        </li>
+        <li><a href="/{{ backlink.link_path }}">{{ backlink.title }}</a></li>
         {% endfor %}
       </ul>
     </div>
