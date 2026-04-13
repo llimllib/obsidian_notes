@@ -29,6 +29,7 @@
       {%- for link in tree.dirlinks() %}
       {{ link }} /
       {%- endfor %}
+      <a href="/search.html" class="search">🔍 search</a>
     </div>
     {%- if tree.child_dirs_are_numeric() %}
     {# This is a blog-type tree, and we want to display it in reverse order so

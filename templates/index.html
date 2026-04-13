@@ -36,11 +36,12 @@
   <main class="container">
     <div class="dirlinks" style="margin-bottom: 20px">
       <a href="/">notes.billmill.org</a> /
+      <a href="search.html" class="search">🔍 search</a>
     </div>
     <a href="/">everything</a><a href="/atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
     <a href="/link_blog.html">link blog</a><a href="/link_blog.atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
     <a href="/music/music_blog.html">music blog</a><a href="/music_blog.atom.xml"><img src="feed.svg" class="feedicon" /></a> ⁜
-    <a href="/blog.html">blog blog<a href="/blog.atom.xml"><img src="feed.svg" class="feedicon" /></a>
+    <a href="/blog.html">blog blog</a><a href="/blog.atom.xml"><img src="feed.svg" class="feedicon" /></a>
     <h2>Recently Created</h2>
     <ul>
       {% for page in recently_created %}
@@ -63,9 +64,6 @@
       </li>
       {% endfor %}
     </ul>
-    <div>
-      <a href="search.html">🔍 search notes</a>
-    </div>
     <h2>All Notes</h2>
     <a id="collapseall" href="#">expand all</a>
     <ul class="tree">
