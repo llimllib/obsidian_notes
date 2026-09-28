@@ -579,19 +579,19 @@ p.important-title::before {
 }
 
 /* Content styling */
-p.note-content,
-p.abstract-content,
-p.info-content,
-p.tip-content,
-p.success-content,
-p.question-content,
-p.warning-content,
-p.failure-content,
-p.danger-content,
-p.bug-content,
-p.example-content,
-p.quote-content,
-p.important-content {
+.note-content > :first-child,
+.abstract-content > :first-child,
+.info-content > :first-child,
+.tip-content > :first-child,
+.success-content > :first-child,
+.question-content > :first-child,
+.warning-content > :first-child,
+.failure-content > :first-child,
+.danger-content > :first-child,
+.bug-content > :first-child,
+.example-content > :first-child,
+.quote-content > :first-child,
+.important-content > :first-child {
   margin-top: 0;
 }
 

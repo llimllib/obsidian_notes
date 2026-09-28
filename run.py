@@ -859,13 +859,10 @@ def callout_replacer(m: re.Match) -> str:
     title = m.group(2).strip() or callout_type.capitalize()
     content = m.group(3)
 
-    # Remove the '>' prefix from each line
-    lines = [
-        line[1:].strip() if line.startswith(">") else line
-        for line in content.split("\n")
-        if line.strip()
-    ]
-    content_text = "\n".join(lines)
+    # Remove the '>' prefix (and one optional following space) from each line,
+    # preserving indentation and blank lines so the body parses as markdown
+    lines = [re.sub(r"^> ?", "", line) for line in content.split("\n")]
+    content_text = "\n".join(lines).strip("\n")
 
     # Map Obsidian types to CSS class names and colors
     type_map = {
@@ -886,7 +883,13 @@ def callout_replacer(m: re.Match) -> str:
     }
     css_class = type_map.get(callout_type, "note")
 
-    return f'\n<div class="admon-{css_class}"><p class="{css_class}-title">{title}</p><p class="{css_class}-content">{content_text}</p></div>\n'
+    # An HTML block ends at a blank line, so the blank lines surrounding
+    # content_text cause markdown-it to render the body as markdown rather than
+    # passing it through as raw HTML
+    return (
+        f'\n<div class="admon-{css_class}"><p class="{css_class}-title">{title}</p>'
+        f'<div class="{css_class}-content">\n\n{content_text}\n\n</div></div>\n'
+    )
 
 
 def substitute_callouts(pages: dict[str, Page]) -> None:
