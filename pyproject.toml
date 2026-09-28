@@ -14,6 +14,7 @@ dependencies = [
     "pygments",
     "PyYAML",
     "strict-rfc3339",
+    "pagefind[extended]",
 ]
 
 # https://microsoft.github.io/pyright/#/configuration
